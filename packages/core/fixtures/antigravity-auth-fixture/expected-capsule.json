@@ -1,0 +1,106 @@
+{
+  "manifest": {
+    "version": "1.0.0",
+    "capsuleId": "demo-golden-fixture-uuid",
+    "createdAt": "2026-10-04T10:00:00.000Z",
+    "tier": "full",
+    "source": {
+      "agent": "antigravity",
+      "agentVersion": "2.0.0",
+      "os": "win32",
+      "hostname": "Workstation-Demo",
+      "workspaceName": "cadence-api"
+    },
+    "compatibility": {
+      "adapterVersion": "1.0.0",
+      "nativeRestoreSupported": true
+    }
+  },
+  "handover": {
+    "objective": "Fix refresh-token race condition",
+    "completedMilestones": [
+      "Token rotation logic drafted",
+      "Redis replay key integration implemented"
+    ],
+    "observedActivity": [
+      "Modified 2 files during session",
+      "Diff: 2 files changed, 14 insertions(+), 2 deletions(-)"
+    ],
+    "failedAttempts": [
+      "Stateless token replay approach failed",
+      "AssertionError: Expected 401 on token replay, got 200"
+    ],
+    "currentBlockerOrActiveState": "AssertionError: Expected 401 when replaying rotated refresh token within 500ms window, but received 200.",
+    "criticalFiles": [
+      "src/services/TokenService.ts",
+      "src/controllers/AuthController.ts"
+    ],
+    "importantDecisions": [
+      "Redis token rotation selected over MongoDB transactions",
+      "Atomic single-key lock used for token rotation"
+    ],
+    "environmentConstraints": [
+      "Requires Node 20+ runtime",
+      "Legacy payment endpoints must remain untouched"
+    ],
+    "suggestedNextAction": "Fix replay hash lookup timing in TokenService.rotateRefreshToken to ensure atomic 401 rejection",
+    "primedResumePrompt": "You are resuming an active task.\nObjective: Fix refresh-token race condition\nDecisions: Using Redis token rotation, Node 20+\nCurrent Blocker: AssertionError: Expected 401 when replaying rotated refresh token within 500ms window, but received 200.\nCritical Files: src/services/TokenService.ts, src/controllers/AuthController.ts\nPlease resolve the race condition in TokenService.ts and run tests.",
+    "confidence": {
+      "objective": "high",
+      "currentState": "high"
+    }
+  },
+  "git": {
+    "identity": {
+      "name": "cadence-api",
+      "branch": "feature/auth-race-fix",
+      "headCommit": "a83f91c9201e74f8",
+      "isClean": false,
+      "repositoryFingerprint": "c4d129a0f8b1c4e9"
+    },
+    "workingTreePatch": "diff --git a/src/services/TokenService.ts b/src/services/TokenService.ts\n+ const isReplayed = await this.redis.get(`revoked:${oldToken}`);",
+    "stagedPatch": "",
+    "untrackedSourceFiles": []
+  },
+  "securitySummary": {
+    "redactedSecretsCount": 0,
+    "excludedFiles": []
+  },
+  "conversation": {
+    "totalTurns": 6,
+    "turns": [
+      {
+        "role": "user",
+        "timestamp": "2026-10-04T09:55:00.000Z",
+        "content": "We have an issue in auth: concurrent requests with an expired access token can replay the refresh token multiple times before rotation invalidates it. Can you fix the refresh token race condition in TokenService.ts?"
+      },
+      {
+        "role": "assistant",
+        "timestamp": "2026-10-04T09:55:20.000Z",
+        "content": "I will inspect `src/services/TokenService.ts` and `src/controllers/AuthController.ts`.",
+        "toolSummary": "view_file src/services/TokenService.ts"
+      },
+      {
+        "role": "user",
+        "timestamp": "2026-10-04T09:56:00.000Z",
+        "content": "Let's make sure we use Redis for token rotation and replay prevention rather than MongoDB transactions."
+      },
+      {
+        "role": "assistant",
+        "timestamp": "2026-10-04T09:56:30.000Z",
+        "content": "Understood. Important Decision recorded: We will use Redis for atomic token rotation. Node 20+ required."
+      },
+      {
+        "role": "user",
+        "timestamp": "2026-10-04T09:57:00.000Z",
+        "content": "Run unit tests after your changes."
+      },
+      {
+        "role": "assistant",
+        "timestamp": "2026-10-04T09:58:00.000Z",
+        "content": "Running test suite: AssertionError: Expected 401 when replaying rotated refresh token within 500ms window, but received 200.",
+        "toolSummary": "run_command npm test"
+      }
+    ]
+  }
+}

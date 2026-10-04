@@ -1,0 +1,24 @@
+{
+  "name": "agentdrop-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AgentDrop - Local-first AI context portability layer for coding agents",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspace=@agentdrop/core && npm run test --workspace=@agentdrop/cli",
+    "agentdrop": "node packages/cli/bin/agentdrop.js",
+    "test:security": "npm run test:security --workspace=@agentdrop/core",
+    "test:validator": "npm run test:validator --workspace=@agentdrop/core",
+    "test:git": "npm run test:git --workspace=@agentdrop/core",
+    "test:fallback": "npm run test:fallback --workspace=@agentdrop/core",
+    "test:capsule": "npm run test:capsule --workspace=@agentdrop/core",
+    "test:e2e": "npm run test:e2e --workspace=@agentdrop/core"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.2"
+  }
+}

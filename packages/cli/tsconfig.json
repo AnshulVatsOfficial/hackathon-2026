@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./",
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@agentdrop/core": ["../core/dist/src/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*", "tests/**/*"]
+}

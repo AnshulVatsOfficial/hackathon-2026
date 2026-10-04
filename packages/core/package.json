@@ -1,0 +1,32 @@
+{
+  "name": "@agentdrop/core",
+  "version": "1.0.0",
+  "description": "Headless core engine for AgentDrop",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/tests/*.test.js",
+    "test:security": "node --test dist/tests/security.test.js",
+    "test:validator": "node --test dist/tests/validator.test.js",
+    "test:git": "node --test dist/tests/git.test.js",
+    "test:fallback": "node --test dist/tests/fallback.test.js",
+    "test:capsule": "node --test dist/tests/capsule.test.js",
+    "test:adapters": "node --test dist/tests/adapters.test.js",
+    "test:p2p": "node --test dist/tests/p2p.test.js",
+    "test:e2e": "node --test dist/tests/e2e.test.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.2"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "name": "agentdrop-vscode",
+  "displayName": "AgentDrop — AI Context Portability",
+  "description": "Local-first, vendor-neutral AI coding context portability layer",
+  "version": "1.0.0",
+  "type": "module",
+  "publisher": "agentdrop",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Programming Languages"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onView:agentdrop.sidebarView"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "agentdrop-sidebar",
+          "title": "AgentDrop",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "agentdrop-sidebar": [
+        {
+          "type": "webview",
+          "id": "agentdrop.sidebarView",
+          "name": "AgentDrop Context Portability"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "agentdrop.beamSession",
+        "title": "AgentDrop: Beam Active Session"
+      },
+      {
+        "command": "agentdrop.beamDemo",
+        "title": "AgentDrop: Beam Golden Demo Session"
+      },
+      {
+        "command": "agentdrop.receiveSession",
+        "title": "AgentDrop: Receive Handover Session"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "dependencies": {
+    "@agentdrop/core": "*",
+    "@types/qrcode": "^1.5.6",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.7.2"
+  }
+}

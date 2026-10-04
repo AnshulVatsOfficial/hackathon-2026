@@ -1,0 +1,23 @@
+{
+  "name": "@agentdrop/cli",
+  "version": "1.0.0",
+  "description": "Standalone CLI companion for AgentDrop",
+  "main": "dist/src/index.js",
+  "type": "module",
+  "bin": {
+    "agentdrop": "./bin/agentdrop.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/tests/*.test.js"
+  },
+  "dependencies": {
+    "@agentdrop/core": "*",
+    "@types/qrcode": "^1.5.6",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}
