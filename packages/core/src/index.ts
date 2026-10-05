@@ -8,6 +8,7 @@ export * from "./capsule/version.js";
 export * from "./capsule/validator.js";
 export * from "./capsule/packager.js";
 export * from "./capsule/unpacker.js";
+export * from "./capsule/goldenFixture.js";
 
 // Security & Crypto
 export * from "./security/filePolicy.js";

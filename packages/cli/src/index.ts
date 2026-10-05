@@ -16,7 +16,8 @@ import {
   AntigravityAdapter,
   ClaudeCodeAdapter,
   QRPairingPayload,
-  ContextSyncManager
+  ContextSyncManager,
+  GoldenDemoFixture
 } from "@agentdrop/core";
 
 import { DashboardServer } from "./ui.js";
@@ -75,31 +76,8 @@ async function handleBeam(args: string[]): Promise<void> {
 
   if (isDemo) {
     console.log(`[*] DEMO MODE ENABLED: Loading Golden Fixture (Section 44)...`);
-    // Find expected-capsule.json
-    const possiblePaths = [
-      path.resolve(process.cwd(), "packages/core/fixtures/antigravity-auth-fixture/expected-capsule.json"),
-      path.resolve(process.cwd(), "fixtures/antigravity-auth-fixture/expected-capsule.json"),
-      path.resolve(process.cwd(), "../core/fixtures/antigravity-auth-fixture/expected-capsule.json")
-    ];
-
-    let foundPath = "";
-    for (const p of possiblePaths) {
-      try {
-        await fs.access(p);
-        foundPath = p;
-        break;
-      } catch {
-        // try next
-      }
-    }
-
-    if (!foundPath) {
-      console.error(`[-] Error: Could not locate expected-capsule.json fixture.`);
-      process.exit(1);
-    }
-
-    serializedCapsule = await fs.readFile(foundPath, "utf-8");
-    sessionTitle = "Fix refresh-token race condition";
+    serializedCapsule = await GoldenDemoFixture.loadSerialized();
+    sessionTitle = "Fix refresh-token race condition (Golden Demo)";
   } else {
     console.log(`[*] Scanning local system for active AI coding sessions...`);
     const antigravity = new AntigravityAdapter();
@@ -322,24 +300,7 @@ async function handleSave(args: string[]): Promise<void> {
 
   if (isDemo) {
     console.log(`[*] DEMO MODE ENABLED: Loading Golden Fixture (Section 44)...`);
-    const possiblePaths = [
-      path.resolve(process.cwd(), "packages/core/fixtures/antigravity-auth-fixture/expected-capsule.json"),
-      path.resolve(process.cwd(), "fixtures/antigravity-auth-fixture/expected-capsule.json"),
-      path.resolve(process.cwd(), "../core/fixtures/antigravity-auth-fixture/expected-capsule.json")
-    ];
-    let foundPath = "";
-    for (const p of possiblePaths) {
-      try {
-        await fs.access(p);
-        foundPath = p;
-        break;
-      } catch {}
-    }
-    if (!foundPath) {
-      console.error(`[-] Error: Could not locate expected-capsule.json fixture.`);
-      process.exit(1);
-    }
-    capsule = JSON.parse(await fs.readFile(foundPath, "utf-8"));
+    capsule = await GoldenDemoFixture.loadCapsule();
   } else {
     const antigravity = new AntigravityAdapter();
     const claude = new ClaudeCodeAdapter();
