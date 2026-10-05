@@ -5,11 +5,14 @@
 
 export interface WorkspaceIdentity {
   name: string;
+  remoteOriginUrl?: string;
   remoteOriginFingerprint?: string;
   repositoryFingerprint: string;
   branch: string;
   headCommit: string;
   isClean: boolean;
+  author?: string;
+  contextKey?: string;
 }
 
 export interface GitSnapshot {
@@ -81,5 +84,24 @@ export interface AiCapsule {
   nativePayload?: {
     adapterId: "antigravity" | "claude-code";
     rawFiles: Record<string, string>;
+  };
+}
+
+export interface GitHandoverDocument {
+  version: "1.0.0";
+  capsuleId: string;
+  createdAt: string;
+  sourceAgent: "antigravity" | "claude-code";
+  author?: string;
+  git: {
+    repository?: string;
+    branch: string;
+    commitSha: string;
+    contextKey: string;
+  };
+  handover: AiHandoverState;
+  securitySummary: {
+    redactedSecretsCount: number;
+    excludedFiles: string[];
   };
 }

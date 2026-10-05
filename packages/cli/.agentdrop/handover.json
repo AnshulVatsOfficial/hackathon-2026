@@ -1,0 +1,50 @@
+{
+  "version": "1.0.0",
+  "capsuleId": "demo-golden-fixture-uuid",
+  "createdAt": "2026-10-05T03:53:57.175Z",
+  "sourceAgent": "antigravity",
+  "author": "Divyanshi_Bansal",
+  "git": {
+    "branch": "master",
+    "commitSha": "7fff5191626f4a0baf1428a8890d3a2634923645",
+    "contextKey": "3c3a08c7a7303121"
+  },
+  "handover": {
+    "objective": "Fix refresh-token race condition",
+    "completedMilestones": [
+      "Token rotation logic drafted",
+      "Redis replay key integration implemented"
+    ],
+    "observedActivity": [
+      "Modified 2 files during session",
+      "Diff: 2 files changed, 14 insertions(+), 2 deletions(-)"
+    ],
+    "failedAttempts": [
+      "Stateless token replay approach failed",
+      "AssertionError: Expected 401 on token replay, got 200"
+    ],
+    "currentBlockerOrActiveState": "AssertionError: Expected 401 when replaying rotated refresh token within 500ms window, but received 200.",
+    "criticalFiles": [
+      "src/services/TokenService.ts",
+      "src/controllers/AuthController.ts"
+    ],
+    "importantDecisions": [
+      "Redis token rotation selected over MongoDB transactions",
+      "Atomic single-key lock used for token rotation"
+    ],
+    "environmentConstraints": [
+      "Requires Node 20+ runtime",
+      "Legacy payment endpoints must remain untouched"
+    ],
+    "suggestedNextAction": "Fix replay hash lookup timing in TokenService.rotateRefreshToken to ensure atomic 401 rejection",
+    "primedResumePrompt": "You are resuming an active task.\nObjective: Fix refresh-token race condition\nDecisions: Using Redis token rotation, Node 20+\nCurrent Blocker: AssertionError: Expected 401 when replaying rotated refresh token within 500ms window, but received 200.\nCritical Files: src/services/TokenService.ts, src/controllers/AuthController.ts\nPlease resolve the race condition in TokenService.ts and run tests.",
+    "confidence": {
+      "objective": "high",
+      "currentState": "high"
+    }
+  },
+  "securitySummary": {
+    "redactedSecretsCount": 0,
+    "excludedFiles": []
+  }
+}

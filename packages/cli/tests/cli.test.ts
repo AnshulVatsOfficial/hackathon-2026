@@ -79,4 +79,24 @@ describe("AgentDrop CLI (beam & listen)", () => {
     assert.ok(listenStdout.includes("Fix refresh-token race condition"), "Objective not found in handover");
     assert.ok(listenStdout.includes("PRIMED RESUME PROMPT"), "Primed resume prompt not rendered");
   });
+
+  it("should save golden demo fixture into .agentdrop/ and inspect via status command", async () => {
+    const saveProc = spawn(process.execPath, [cliBin, "save", "--demo"]);
+    let saveStdout = "";
+    saveProc.stdout.on("data", chunk => (saveStdout += chunk));
+    await new Promise(resolve => saveProc.on("close", resolve));
+
+    assert.ok(saveStdout.includes("AI CONTEXT HANDOFF SAVED"), "Save command failed");
+    assert.ok(saveStdout.includes(".agentdrop/HANDOVER.md"), "Markdown path missing");
+
+    const statusProc = spawn(process.execPath, [cliBin, "status"]);
+    let statusStdout = "";
+    statusProc.stdout.on("data", chunk => (statusStdout += chunk));
+    await new Promise(resolve => statusProc.on("close", resolve));
+
+    assert.ok(statusStdout.includes("ACTIVE AI HANDOVER FOUND FOR THIS REPOSITORY"), "Status failed to find handover");
+    assert.ok(statusStdout.includes("Fix refresh-token race condition"), "Objective missing in status");
+    assert.ok(statusStdout.includes("PRIMED RESUME PROMPT"), "Prompt missing in status");
+  });
 });
+

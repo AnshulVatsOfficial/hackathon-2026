@@ -31,19 +31,31 @@ export class GitIdentity {
       const { stdout: statusOut } = await execAsync("git status --porcelain", { cwd: workspacePath });
       const isClean = statusOut.trim().length === 0;
 
-      // 4. Remote Origin Fingerprint (privacy-safe, does not expose raw URL)
+      // 4. Remote Origin URL & Fingerprint
+      let remoteOriginUrl: string | undefined;
       let remoteOriginFingerprint: string | undefined;
       try {
         const { stdout: remoteOut } = await execAsync("git remote get-url origin", { cwd: workspacePath });
         const rawRemote = remoteOut.trim();
         if (rawRemote) {
-          remoteOriginFingerprint = crypto.createHash("sha256").update(rawRemote).digest("hex").slice(0, 16);
+          // Sanitize embedded tokens/credentials like https://oauth2:token@github.com/...
+          remoteOriginUrl = rawRemote.replace(/:\/\/[^@]+@/, "://");
+          remoteOriginFingerprint = crypto.createHash("sha256").update(remoteOriginUrl).digest("hex").slice(0, 16);
         }
       } catch {
         // No remote origin configured
       }
 
-      // 5. Repository Root Commit Hash for Repo Fingerprint
+      // 5. Git Author
+      let author: string | undefined;
+      try {
+        const { stdout: authorOut } = await execAsync("git config user.name", { cwd: workspacePath });
+        author = authorOut.trim() || undefined;
+      } catch {
+        // Author not configured
+      }
+
+      // 6. Repository Root Commit Hash for Repo Fingerprint
       let rootCommit = headCommit;
       try {
         const { stdout: rootCommitOut } = await execAsync("git rev-list --max-parents=0 HEAD", { cwd: workspacePath });
@@ -57,13 +69,23 @@ export class GitIdentity {
 
       const repositoryFingerprint = crypto.createHash("sha256").update(rootCommit).digest("hex").slice(0, 16);
 
+      // 7. Context Binding Key: bound to repo (or name) + branch
+      const contextKey = crypto
+        .createHash("sha256")
+        .update(`${remoteOriginUrl || name}:${branch}`)
+        .digest("hex")
+        .slice(0, 16);
+
       return {
         name,
         branch,
         headCommit,
         isClean,
+        remoteOriginUrl,
         remoteOriginFingerprint,
-        repositoryFingerprint
+        repositoryFingerprint,
+        author,
+        contextKey
       };
     } catch {
       // If not a git repository, fallback to local directory hash

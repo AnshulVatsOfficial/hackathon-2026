@@ -20,7 +20,8 @@ import {
   ClaudeCodeAdapter,
   AiCapsule,
   QRPairingPayload,
-  WorkspaceSafetyReport
+  WorkspaceSafetyReport,
+  ContextSyncManager
 } from "@agentdrop/core";
 
 export class AgentDropViewProvider implements vscode.WebviewViewProvider {
@@ -53,6 +54,15 @@ export class AgentDropViewProvider implements vscode.WebviewViewProvider {
         case "INIT":
           await this._sendDeviceInfo();
           await this._sendSessionsList();
+          await this._checkGitHandoff();
+          break;
+
+        case "CHECK_GIT_STATUS":
+          await this._checkGitHandoff();
+          break;
+
+        case "SAVE_GIT_HANDOVER":
+          await this._handleSaveGitHandover(message.sessionId, message.adapterId, message.isDemo);
           break;
 
         case "REFRESH_SESSIONS":
@@ -275,6 +285,112 @@ export class AgentDropViewProvider implements vscode.WebviewViewProvider {
       this._sender = undefined;
     }
     this._postMessage({ type: "BEAM_CANCELLED" });
+  }
+
+  private async _checkGitHandoff(): Promise<void> {
+    try {
+      const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd();
+      const status = await ContextSyncManager.getStatus(workspaceRoot);
+
+      if (status.hasActiveHandoff && status.handover) {
+        this._lastReceivedCapsule = {
+          manifest: {
+            version: "1.0.0",
+            capsuleId: status.handover.capsuleId,
+            createdAt: status.handover.createdAt,
+            tier: "fast",
+            source: {
+              agent: status.handover.sourceAgent,
+              os: "win32",
+              hostname: "GitRemote",
+              workspaceName: status.workspaceIdentity.name
+            }
+          },
+          handover: status.handover.handover,
+          git: {
+            identity: status.workspaceIdentity,
+            workingTreePatch: "",
+            stagedPatch: "",
+            untrackedSourceFiles: []
+          },
+          securitySummary: status.handover.securitySummary
+        };
+
+        this._postMessage({
+          type: "GIT_HANDOVER_LOADED",
+          status,
+          document: status.handover
+        });
+      } else {
+        this._postMessage({
+          type: "GIT_STATUS_UPDATED",
+          status
+        });
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  private async _handleSaveGitHandover(sessionId?: string, adapterId?: string, isDemo?: boolean): Promise<void> {
+    try {
+      const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd();
+      let capsule: AiCapsule;
+
+      if (isDemo) {
+        const possiblePaths = [
+          path.resolve(this._extensionUri.fsPath, "../core/fixtures/antigravity-auth-fixture/expected-capsule.json"),
+          path.resolve(process.cwd(), "packages/core/fixtures/antigravity-auth-fixture/expected-capsule.json"),
+          path.resolve(process.cwd(), "fixtures/antigravity-auth-fixture/expected-capsule.json")
+        ];
+        let foundPath = "";
+        for (const p of possiblePaths) {
+          try {
+            await fs.access(p);
+            foundPath = p;
+            break;
+          } catch {}
+        }
+        if (!foundPath) throw new Error("Golden fixture not found");
+        capsule = JSON.parse(await fs.readFile(foundPath, "utf-8"));
+      } else {
+        const adapter = adapterId === "claude-code" ? new ClaudeCodeAdapter() : new AntigravityAdapter();
+        const extracted = await adapter.extractSession(sessionId!);
+        const { sanitizedTurns, redactedCount } = PreSanitizer.preSanitize(extracted.turns);
+        const gitSnapshot = await GitSnapshotCollector.captureSnapshot(workspaceRoot);
+        const handover = DeterministicExtractor.extract({
+          sessionTitle: extracted.title,
+          firstSubstantiveUserPrompt: sanitizedTurns[0]?.content || "Development task",
+          recentUserPrompts: sanitizedTurns.filter(t => t.role === "user").map(t => t.content).slice(-3),
+          lastAssistantResponse: sanitizedTurns.filter(t => t.role === "assistant").pop()?.content,
+          recentToolErrors: [],
+          modifiedFilesList: []
+        });
+        const packResult = CapsulePackager.pack({
+          sourceAgent: adapter.id,
+          workspaceName: gitSnapshot.identity.name,
+          handover,
+          git: gitSnapshot,
+          conversation: { totalTurns: sanitizedTurns.length, turns: sanitizedTurns },
+          selectedFiles: gitSnapshot.untrackedSourceFiles,
+          nativePayload: { adapterId: adapter.id, rawFiles: extracted.rawFiles }
+        });
+        capsule = packResult.capsule;
+      }
+
+      const saveResult = await ContextSyncManager.saveHandoff(workspaceRoot, capsule, { saveFullCapsule: true });
+      vscode.window.showInformationMessage(
+        `AgentDrop: AI Handover saved to .agentdrop/handover.json (${saveResult.identity.branch}). Commit & push to share via GitHub!`
+      );
+
+      this._postMessage({
+        type: "GIT_HANDOVER_SAVED",
+        saveResult
+      });
+      await this._checkGitHandoff();
+    } catch (err: any) {
+      vscode.window.showErrorMessage(`Failed to save AI handover: ${err?.message}`);
+    }
   }
 
   private async _handleConnectPeer(tokenOrUrl: string, secret?: string): Promise<void> {

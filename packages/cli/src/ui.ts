@@ -18,7 +18,8 @@ import {
   AntigravityAdapter,
   ClaudeCodeAdapter,
   QRPairingPayload,
-  AiCapsule
+  AiCapsule,
+  ContextSyncManager
 } from "@agentdrop/core";
 
 export class DashboardServer {
@@ -107,6 +108,80 @@ export class DashboardServer {
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: err?.message }));
       }
+      return;
+    }
+
+    if (url.pathname === "/api/git-status" && req.method === "GET") {
+      try {
+        const status = await ContextSyncManager.getStatus(process.cwd());
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(status));
+      } catch (err: any) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: err?.message }));
+      }
+      return;
+    }
+
+    if (url.pathname === "/api/git-save" && req.method === "POST") {
+      let body = "";
+      req.on("data", chunk => (body += chunk));
+      req.on("end", async () => {
+        try {
+          const params = JSON.parse(body || "{}");
+          let capsule: any;
+
+          if (params.isDemo) {
+            const possiblePaths = [
+              path.resolve(process.cwd(), "packages/core/fixtures/antigravity-auth-fixture/expected-capsule.json"),
+              path.resolve(process.cwd(), "fixtures/antigravity-auth-fixture/expected-capsule.json"),
+              path.resolve(process.cwd(), "../core/fixtures/antigravity-auth-fixture/expected-capsule.json")
+            ];
+            let found = "";
+            for (const p of possiblePaths) {
+              try {
+                await fs.access(p);
+                found = p;
+                break;
+              } catch {}
+            }
+            if (!found) throw new Error("Golden demo fixture not found");
+            capsule = JSON.parse(await fs.readFile(found, "utf-8"));
+          } else {
+            const adapter = params.adapterId === "claude-code" ? new ClaudeCodeAdapter() : new AntigravityAdapter();
+            const extracted = await adapter.extractSession(params.sessionId);
+            const { sanitizedTurns } = PreSanitizer.preSanitize(extracted.turns);
+            const gitSnapshot = await GitSnapshotCollector.captureSnapshot(process.cwd());
+
+            const handover = DeterministicExtractor.extract({
+              sessionTitle: extracted.title,
+              firstSubstantiveUserPrompt: sanitizedTurns[0]?.content || "Development task",
+              recentUserPrompts: sanitizedTurns.filter(t => t.role === "user").map(t => t.content).slice(-3),
+              lastAssistantResponse: sanitizedTurns.filter(t => t.role === "assistant").pop()?.content,
+              recentToolErrors: [],
+              modifiedFilesList: []
+            });
+
+            const packed = CapsulePackager.pack({
+              sourceAgent: adapter.id,
+              workspaceName: gitSnapshot.identity.name,
+              handover,
+              git: gitSnapshot,
+              conversation: { totalTurns: sanitizedTurns.length, turns: sanitizedTurns },
+              selectedFiles: gitSnapshot.untrackedSourceFiles,
+              nativePayload: { adapterId: adapter.id, rawFiles: extracted.rawFiles }
+            });
+            capsule = packed.capsule;
+          }
+
+          const saveResult = await ContextSyncManager.saveHandoff(process.cwd(), capsule, { saveFullCapsule: true });
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify(saveResult));
+        } catch (err: any) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: err?.message }));
+        }
+      });
       return;
     }
 

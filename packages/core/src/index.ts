@@ -33,3 +33,9 @@ export * from "./network/discovery.js";
 export * from "./adapters/AgentAdapter.js";
 export * from "./adapters/antigravity/AntigravityAdapter.js";
 export * from "./adapters/claude/ClaudeCodeAdapter.js";
+
+// Git & Remote Asynchronous Sync
+export * from "./sync/SyncTypes.js";
+export * from "./sync/GitRepoProvider.js";
+export * from "./sync/RemoteSyncProvider.js";
+export * from "./sync/ContextSyncManager.js";

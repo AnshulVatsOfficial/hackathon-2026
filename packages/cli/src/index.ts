@@ -15,7 +15,8 @@ import {
   NetworkDiscovery,
   AntigravityAdapter,
   ClaudeCodeAdapter,
-  QRPairingPayload
+  QRPairingPayload,
+  ContextSyncManager
 } from "@agentdrop/core";
 
 import { DashboardServer } from "./ui.js";
@@ -30,6 +31,18 @@ async function main(): Promise<void> {
   console.log(`======================================================\n`);
 
   switch (command) {
+    case "save":
+      await handleSave(args.slice(1));
+      break;
+
+    case "status":
+      await handleStatus();
+      break;
+
+    case "load":
+      await handleLoad();
+      break;
+
     case "beam":
       await handleBeam(args.slice(1));
       break;
@@ -299,6 +312,149 @@ async function handleSessions(): Promise<void> {
   }
 }
 
+async function handleSave(args: string[]): Promise<void> {
+  const isDemo = args.includes("--demo");
+  const workspaceRoot = process.cwd();
+
+  console.log(`[*] Generating Git-Native AI Context Handoff for project...`);
+
+  let capsule: any;
+
+  if (isDemo) {
+    console.log(`[*] DEMO MODE ENABLED: Loading Golden Fixture (Section 44)...`);
+    const possiblePaths = [
+      path.resolve(process.cwd(), "packages/core/fixtures/antigravity-auth-fixture/expected-capsule.json"),
+      path.resolve(process.cwd(), "fixtures/antigravity-auth-fixture/expected-capsule.json"),
+      path.resolve(process.cwd(), "../core/fixtures/antigravity-auth-fixture/expected-capsule.json")
+    ];
+    let foundPath = "";
+    for (const p of possiblePaths) {
+      try {
+        await fs.access(p);
+        foundPath = p;
+        break;
+      } catch {}
+    }
+    if (!foundPath) {
+      console.error(`[-] Error: Could not locate expected-capsule.json fixture.`);
+      process.exit(1);
+    }
+    capsule = JSON.parse(await fs.readFile(foundPath, "utf-8"));
+  } else {
+    const antigravity = new AntigravityAdapter();
+    const claude = new ClaudeCodeAdapter();
+
+    const agSessions = (await antigravity.isInstalled()) ? await antigravity.listRecentSessions() : [];
+    const claudeSessions = (await claude.isInstalled()) ? await claude.listRecentSessions() : [];
+
+    if (agSessions.length === 0 && claudeSessions.length === 0) {
+      console.log(`[!] No active local sessions found in Antigravity or Claude Code.`);
+      console.log(`[*] Tip: Run 'agentdrop save --demo' to test the Git handoff with the verified golden demo fixture!`);
+      process.exit(0);
+    }
+
+    let selectedAdapter: any = agSessions.length > 0 ? antigravity : claude;
+    let selectedSession = agSessions.length > 0 ? agSessions[0] : claudeSessions[0];
+
+    console.log(`[+] Capturing session: [${selectedAdapter.displayName}] "${selectedSession.title}"`);
+    const extracted = await selectedAdapter.extractSession(selectedSession.sessionId);
+
+    const { sanitizedTurns, redactedCount } = PreSanitizer.preSanitize(extracted.turns);
+    console.log(`    - Scrubbed ${redactedCount} potential secret(s)`);
+
+    const gitSnapshot = await GitSnapshotCollector.captureSnapshot(workspaceRoot);
+    const handover = DeterministicExtractor.extract({
+      sessionTitle: extracted.title,
+      firstSubstantiveUserPrompt: sanitizedTurns[0]?.content || "Development task",
+      recentUserPrompts: sanitizedTurns.filter((t: any) => t.role === "user").map((t: any) => t.content).slice(-3),
+      lastAssistantResponse: sanitizedTurns.filter((t: any) => t.role === "assistant").pop()?.content,
+      recentToolErrors: [],
+      modifiedFilesList: []
+    });
+
+    const packResult = CapsulePackager.pack({
+      sourceAgent: selectedAdapter.id,
+      workspaceName: gitSnapshot.identity.name,
+      handover,
+      git: gitSnapshot,
+      conversation: { totalTurns: sanitizedTurns.length, turns: sanitizedTurns },
+      selectedFiles: gitSnapshot.untrackedSourceFiles,
+      nativePayload: { adapterId: selectedAdapter.id, rawFiles: extracted.rawFiles }
+    });
+
+    capsule = packResult.capsule;
+  }
+
+  const saveResult = await ContextSyncManager.saveHandoff(workspaceRoot, capsule, { saveFullCapsule: true });
+
+  console.log(`\n======================================================`);
+  console.log(`  AI CONTEXT HANDOFF SAVED (Git-Native & Persistent)`);
+  console.log(`======================================================`);
+  console.log(`  Contract:  ${saveResult.handoverPath}`);
+  console.log(`  Markdown:  .agentdrop/HANDOVER.md (Rendered directly on GitHub.com)`);
+  console.log(`  Branch:    ${saveResult.identity.branch}`);
+  console.log(`  Commit:    ${saveResult.identity.headCommit.slice(0, 7)}`);
+  console.log(`  Objective: ${saveResult.document.handover.objective}`);
+  console.log(`======================================================\n`);
+  console.log(`[*] NEXT STEP FOR DEVELOPER 1:`);
+  console.log(`    git add .agentdrop && git commit -m "chore: save AI handover" && git push`);
+  console.log(`\n[*] ON MACHINE 2:`);
+  console.log(`    When Developer 2 clones or checks out '${saveResult.identity.branch}',`);
+  console.log(`    run 'agentdrop status' or open VS Code to resume immediately without re-prompting!\n`);
+}
+
+async function handleStatus(): Promise<void> {
+  const workspaceRoot = process.cwd();
+  const status = await ContextSyncManager.getStatus(workspaceRoot);
+
+  console.log(`Workspace: ${status.workspaceIdentity.name}`);
+  console.log(`Branch:    ${status.workspaceIdentity.branch}`);
+  if (status.workspaceIdentity.remoteOriginUrl) {
+    console.log(`Remote:    ${status.workspaceIdentity.remoteOriginUrl}`);
+  }
+
+  if (!status.hasActiveHandoff) {
+    console.log(`\n[!] No active AI handoff found in this repository.`);
+    console.log(`    Run 'agentdrop save' to capture the current AI coding context!`);
+    return;
+  }
+
+  const doc = status.handover!;
+  console.log(`\n======================================================`);
+  console.log(`  ACTIVE AI HANDOVER FOUND FOR THIS REPOSITORY`);
+  console.log(`======================================================`);
+  console.log(`  Author:    ${doc.author || "Unknown"}`);
+  console.log(`  Branch:    ${doc.git.branch} ${status.isBranchMatch ? "(Current Branch)" : "(Branch Mismatch!)"}`);
+  console.log(`  Commit:    ${doc.git.commitSha.slice(0, 7)}`);
+  console.log(`  Objective: ${doc.handover.objective}`);
+  if (doc.handover.currentBlockerOrActiveState) {
+    console.log(`\n  CURRENT ROADBLOCK:`);
+    console.log(`    ! ${doc.handover.currentBlockerOrActiveState}`);
+  }
+  if (doc.handover.importantDecisions?.length) {
+    console.log(`\n  IMPORTANT DECISIONS:`);
+    for (const d of doc.handover.importantDecisions) {
+      console.log(`    ✓ ${d}`);
+    }
+  }
+  console.log(`\n  PRIMED RESUME PROMPT (Ready to paste or launch):`);
+  console.log(`------------------------------------------------------`);
+  console.log(doc.handover.primedResumePrompt);
+  console.log(`------------------------------------------------------\n`);
+}
+
+async function handleLoad(): Promise<void> {
+  const workspaceRoot = process.cwd();
+  const result = await ContextSyncManager.loadHandoff(workspaceRoot);
+
+  if (!result.found || !result.document) {
+    console.error(`[-] No AI handoff found in current workspace. Run 'agentdrop save' first.`);
+    process.exit(1);
+  }
+
+  console.log(result.document.handover.primedResumePrompt);
+}
+
 async function handleUi(args: string[]): Promise<void> {
   const port = parseInt(args[0], 10) || 3333;
   const dashboard = new DashboardServer(port);
@@ -318,10 +474,12 @@ async function handleUi(args: string[]): Promise<void> {
 
 function printUsage(): void {
   console.log(`Usage:`);
-  console.log(`  agentdrop beam             Beam the most recent active AI coding session`);
-  console.log(`  agentdrop beam --demo      Beam the verified Golden Demo Fixture`);
-  console.log(`  agentdrop listen <token>   Receive incoming AI handover session`);
+  console.log(`  agentdrop save [--demo]    Save in-flight AI session into Git repo (.agentdrop/handover.json)`);
+  console.log(`  agentdrop status           Inspect active AI handoff in current Git repository`);
+  console.log(`  agentdrop load             Output primed resume prompt for target AI tool`);
   console.log(`  agentdrop sessions         List local AI sessions across installed tools`);
+  console.log(`  agentdrop beam [--demo]    Beam session over local network (P2P mode)`);
+  console.log(`  agentdrop listen <token>   Receive incoming AI handover session over local network`);
   console.log(`  agentdrop ui [port]        Launch interactive Web UI dashboard (default: 3333)`);
   console.log(`  agentdrop --help           Show this help information\n`);
 }
