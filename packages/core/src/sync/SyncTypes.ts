@@ -38,3 +38,16 @@ export interface SyncStatusResult {
   handover?: GitHandoverDocument;
   isBranchMatch: boolean;
 }
+
+export interface InitializeProjectOptions {
+  setupGitHooks?: boolean;
+  setupAgentBridge?: boolean;
+  setupNpmScripts?: boolean;
+}
+
+export interface InitializeProjectResult {
+  agentdropDir: string;
+  agentBridgeUpdated: boolean;
+  hooksInstalled: string[];
+  packageJsonUpdated: boolean;
+}

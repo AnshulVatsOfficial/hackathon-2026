@@ -9,7 +9,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "node --test dist/tests/*.test.js"
+    "test": "node --test dist/tests/*.test.js",
+    "ai:resume": "agentdrop load",
+    "ai:status": "agentdrop status"
   },
   "dependencies": {
     "@agentdrop/core": "*",

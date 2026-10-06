@@ -32,6 +32,14 @@ async function main(): Promise<void> {
   console.log(`======================================================\n`);
 
   switch (command) {
+    case "init":
+      await handleInit();
+      break;
+
+    case "hook":
+      await handleHook(args.slice(1));
+      break;
+
     case "save":
       await handleSave(args.slice(1));
       break;
@@ -433,8 +441,48 @@ async function handleUi(args: string[]): Promise<void> {
   await new Promise(() => {});
 }
 
+async function handleInit(): Promise<void> {
+  const workspaceRoot = process.cwd();
+  console.log(`[*] Initializing AgentDrop in workspace: ${path.basename(workspaceRoot)}...`);
+
+  const res = await ContextSyncManager.initializeProject(workspaceRoot);
+
+  console.log(`\n======================================================`);
+  console.log(`  AgentDrop — Project Initialized Successfully!`);
+  console.log(`======================================================`);
+  console.log(`  Context Dir:    .agentdrop/`);
+  console.log(`  AI Bridge:      ${res.agentBridgeUpdated ? "AGENTS.md updated (Turn-1 auto-ingestion active)" : "AGENTS.md already configured"}`);
+  console.log(`  Git Hooks:      ${res.hooksInstalled.length > 0 ? res.hooksInstalled.join(", ") : "No .git directory found"}`);
+  console.log(`  package.json:   ${res.packageJsonUpdated ? "Added 'ai:resume' and 'ai:status' scripts" : "Scripts already present or no package.json"}`);
+  console.log(`======================================================\n`);
+  console.log(`[*] NEXT STEPS:`);
+  console.log(`    • Save an AI task:          agentdrop save (or agentdrop save --demo)`);
+  console.log(`    • Check status anytime:     agentdrop status`);
+  console.log(`    • Resume task:              npm run ai:resume (or agentdrop load)\n`);
+}
+
+async function handleHook(args: string[]): Promise<void> {
+  const action = args[0] || "install";
+  const workspaceRoot = process.cwd();
+
+  if (action === "uninstall") {
+    await ContextSyncManager.uninstallHooks(workspaceRoot);
+    console.log(`[+] AgentDrop Git lifecycle hooks uninstalled from .git/hooks/`);
+  } else {
+    const res = await ContextSyncManager.installHooks(workspaceRoot);
+    if (res.success) {
+      console.log(`[+] Installed Git lifecycle hooks: ${res.hooks.join(", ")} in .git/hooks/`);
+      console.log(`[*] Whenever you run 'git pull' or 'git checkout', in-flight AI handovers will be announced.`);
+    } else {
+      console.log(`[!] Could not install hooks: no .git directory found at ${workspaceRoot}`);
+    }
+  }
+}
+
 function printUsage(): void {
   console.log(`Usage:`);
+  console.log(`  agentdrop init             Initialize AgentDrop in current project (AGENTS.md, Git hooks, scripts)`);
+  console.log(`  agentdrop hook [install]   Install Git post-pull / post-checkout notification hooks`);
   console.log(`  agentdrop save [--demo]    Save in-flight AI session into Git repo (.agentdrop/handover.json)`);
   console.log(`  agentdrop status           Inspect active AI handoff in current Git repository`);
   console.log(`  agentdrop load             Output primed resume prompt for target AI tool`);

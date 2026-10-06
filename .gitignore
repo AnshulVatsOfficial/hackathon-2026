@@ -8,3 +8,6 @@ temp/
 coverage/
 .DS_Store
 Thumbs.db
+*.tgz
+packages/cli/.agentdrop/
+packages/cli/AGENTS.md

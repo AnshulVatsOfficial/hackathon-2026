@@ -6,6 +6,7 @@
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert";
 import fs from "node:fs/promises";
+import syncFs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { exec } from "node:child_process";
@@ -140,5 +141,49 @@ describe("Git & Asynchronous Context Sync", () => {
 
     assert.ok(cached !== null);
     assert.strictEqual(cached?.handover.objective, "Implement refresh-token rotation with reuse detection");
+  });
+
+  it("should automatically ensure AGENTS.md instruction bridge on handoff save", async () => {
+    const agentsFile = path.join(tempRepo, "AGENTS.md");
+    assert.ok(syncFs.existsSync(agentsFile));
+    const content = syncFs.readFileSync(agentsFile, "utf-8");
+    assert.ok(content.includes("AgentDrop Context Bridge"));
+    assert.ok(content.includes(".agentdrop/HANDOVER.md"));
+  });
+
+  it("should initialize project with .agentdrop, AGENTS.md, git hooks, and npm scripts", async () => {
+    const freshDir = syncFs.mkdtempSync(path.join(os.tmpdir(), "agentdrop-init-test-"));
+    await execAsync("git init", { cwd: freshDir });
+    syncFs.writeFileSync(path.join(freshDir, "package.json"), JSON.stringify({ name: "my-app", scripts: { test: "jest" } }, null, 2));
+
+    const result = await ContextSyncManager.initializeProject(freshDir);
+    assert.strictEqual(result.agentBridgeUpdated, true);
+    assert.strictEqual(result.packageJsonUpdated, true);
+    assert.ok(result.hooksInstalled.includes("post-merge"));
+    assert.ok(result.hooksInstalled.includes("post-checkout"));
+
+    // Verify files created
+    assert.ok(syncFs.existsSync(path.join(freshDir, ".agentdrop")));
+    assert.ok(syncFs.existsSync(path.join(freshDir, "AGENTS.md")));
+    assert.ok(syncFs.existsSync(path.join(freshDir, ".git", "hooks", "post-merge")));
+
+    // Verify package.json scripts
+    const pkg = JSON.parse(syncFs.readFileSync(path.join(freshDir, "package.json"), "utf-8"));
+    assert.strictEqual(pkg.scripts["ai:resume"], "agentdrop load");
+    assert.strictEqual(pkg.scripts["ai:status"], "agentdrop status");
+
+    // Clean up
+    syncFs.rmSync(freshDir, { recursive: true, force: true });
+  });
+
+  it("should install and uninstall git hooks cleanly", async () => {
+    const hookDir = path.join(tempRepo, ".git", "hooks");
+    const installRes = await ContextSyncManager.installHooks(tempRepo);
+    assert.strictEqual(installRes.success, true);
+    assert.ok(syncFs.existsSync(path.join(hookDir, "post-merge")));
+
+    const uninstallRes = await ContextSyncManager.uninstallHooks(tempRepo);
+    assert.strictEqual(uninstallRes.success, true);
+    assert.ok(!syncFs.existsSync(path.join(hookDir, "post-merge")));
   });
 });

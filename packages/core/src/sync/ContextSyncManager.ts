@@ -84,4 +84,36 @@ export class ContextSyncManager {
       isBranchMatch: loadResult.isBranchMatch
     };
   }
+
+  /**
+   * Initializes a project for AgentDrop:
+   * Sets up .agentdrop/, AGENTS.md bridge, Git hooks, and package.json scripts.
+   */
+  public static async initializeProject(
+    workspacePath: string,
+    options?: import("./SyncTypes.js").InitializeProjectOptions
+  ): Promise<import("./SyncTypes.js").InitializeProjectResult> {
+    return GitRepoProvider.initializeProject(workspacePath, options);
+  }
+
+  /**
+   * Installs Git post-merge and post-checkout hooks in .git/hooks/
+   */
+  public static async installHooks(workspacePath: string): Promise<{ success: boolean; hooks: string[] }> {
+    return GitRepoProvider.installGitHooks(workspacePath);
+  }
+
+  /**
+   * Uninstalls AgentDrop hooks from .git/hooks/
+   */
+  public static async uninstallHooks(workspacePath: string): Promise<{ success: boolean }> {
+    return GitRepoProvider.uninstallGitHooks(workspacePath);
+  }
+
+  /**
+   * Ensures the AI agent instruction bridge is in place (AGENTS.md / CLAUDE.md)
+   */
+  public static async ensureAgentBridge(workspacePath: string): Promise<boolean> {
+    return GitRepoProvider.ensureAgentInstructionBridge(workspacePath);
+  }
 }

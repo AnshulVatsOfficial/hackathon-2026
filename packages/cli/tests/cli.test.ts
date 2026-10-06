@@ -98,5 +98,31 @@ describe("AgentDrop CLI (beam & listen)", () => {
     assert.ok(statusStdout.includes("Fix refresh-token race condition"), "Objective missing in status");
     assert.ok(statusStdout.includes("PRIMED RESUME PROMPT"), "Prompt missing in status");
   });
+
+  it("should initialize project via 'init' command", async () => {
+    const initProc = spawn(process.execPath, [cliBin, "init"]);
+    let initStdout = "";
+    initProc.stdout.on("data", chunk => (initStdout += chunk));
+    await new Promise(resolve => initProc.on("close", resolve));
+
+    assert.ok(initStdout.includes("Project Initialized Successfully"), "Init banner missing");
+    assert.ok(initStdout.includes(".agentdrop/"), "Context dir missing in init output");
+  });
+
+  it("should install and uninstall hooks via 'hook' command", async () => {
+    const hookInstallProc = spawn(process.execPath, [cliBin, "hook", "install"]);
+    let hookStdout = "";
+    hookInstallProc.stdout.on("data", chunk => (hookStdout += chunk));
+    await new Promise(resolve => hookInstallProc.on("close", resolve));
+
+    assert.ok(hookStdout.includes("Installed Git lifecycle hooks") || hookStdout.includes("hooks in .git/hooks/"), "Hook install output missing");
+
+    const hookUninstallProc = spawn(process.execPath, [cliBin, "hook", "uninstall"]);
+    let unhookStdout = "";
+    hookUninstallProc.stdout.on("data", chunk => (unhookStdout += chunk));
+    await new Promise(resolve => hookUninstallProc.on("close", resolve));
+
+    assert.ok(unhookStdout.includes("uninstalled"), "Hook uninstall output missing");
+  });
 });
 
