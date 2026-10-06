@@ -99,8 +99,8 @@ export class DashboardServer {
         res.end(
           JSON.stringify({
             sessions: [
-              ...agSessions.map(s => ({ ...s, adapterId: "antigravity", adapterName: "Google Antigravity" })),
-              ...claudeSessions.map(s => ({ ...s, adapterId: "claude-code", adapterName: "Claude Code" }))
+              ...agSessions.map((s: any) => ({ ...s, adapterId: "antigravity", adapterName: "Google Antigravity" })),
+              ...claudeSessions.map((s: any) => ({ ...s, adapterId: "claude-code", adapterName: "Claude Code" }))
             ]
           })
         );
@@ -156,8 +156,8 @@ export class DashboardServer {
             const handover = DeterministicExtractor.extract({
               sessionTitle: extracted.title,
               firstSubstantiveUserPrompt: sanitizedTurns[0]?.content || "Development task",
-              recentUserPrompts: sanitizedTurns.filter(t => t.role === "user").map(t => t.content).slice(-3),
-              lastAssistantResponse: sanitizedTurns.filter(t => t.role === "assistant").pop()?.content,
+              recentUserPrompts: sanitizedTurns.filter((t: any) => t.role === "user").map((t: any) => t.content).slice(-3),
+              lastAssistantResponse: sanitizedTurns.filter((t: any) => t.role === "assistant").pop()?.content,
               recentToolErrors: [],
               modifiedFilesList: []
             });
@@ -224,8 +224,8 @@ export class DashboardServer {
             const handover = DeterministicExtractor.extract({
               sessionTitle: extracted.title,
               firstSubstantiveUserPrompt: sanitizedTurns[0]?.content || "Development task",
-              recentUserPrompts: sanitizedTurns.filter(t => t.role === "user").map(t => t.content).slice(-3),
-              lastAssistantResponse: sanitizedTurns.filter(t => t.role === "assistant").pop()?.content,
+              recentUserPrompts: sanitizedTurns.filter((t: any) => t.role === "user").map((t: any) => t.content).slice(-3),
+              lastAssistantResponse: sanitizedTurns.filter((t: any) => t.role === "assistant").pop()?.content,
               recentToolErrors: [],
               modifiedFilesList: []
             });

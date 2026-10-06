@@ -1,0 +1,35 @@
+{
+  "version": "1.0.0",
+  "capsuleId": "7bd6d16f-5c27-4261-bc8e-30a79ab1a375",
+  "createdAt": "2026-10-06T05:59:36.852Z",
+  "sourceAgent": "antigravity",
+  "author": "Shekhar Aggarwal",
+  "git": {
+    "repository": "https://github.com/AnshulVatsOfficial/hackathon-2026.git",
+    "branch": "main",
+    "commitSha": "ca099dc81b6b0d0fc119f95c412e32bc5e11cdee",
+    "contextKey": "a7b82e7da3723c20"
+  },
+  "handover": {
+    "objective": "/plan yes, proceed but safely. we need to test it today using a real project so don't make mistakes.",
+    "completedMilestones": [],
+    "observedActivity": [
+      "Working tree edits captured in git snapshot"
+    ],
+    "failedAttempts": [],
+    "currentBlockerOrActiveState": "Active development in progress",
+    "criticalFiles": [],
+    "importantDecisions": [],
+    "environmentConstraints": [],
+    "suggestedNextAction": "Review recent changes and resume task",
+    "primedResumePrompt": "You are resuming an in-flight development session.\nObjective: /plan yes, proceed but safely. we need to test it today using a real project so don't make mistakes.\nCritical Files: See working tree changes\nRecent instructions:\n- /plan yes, proceed but safely. we need to test it today using a real project so don't make mistakes.\nPlease inspect these files and continue from where we left off.",
+    "confidence": {
+      "objective": "high",
+      "currentState": "medium"
+    }
+  },
+  "securitySummary": {
+    "redactedSecretsCount": 0,
+    "excludedFiles": []
+  }
+}

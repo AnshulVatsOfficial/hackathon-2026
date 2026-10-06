@@ -12,6 +12,13 @@
       "default": "./dist/src/index.js"
     }
   },
+  "files": [
+    "dist",
+    "fixtures"
+  ],
+  "publishConfig": {
+    "access": "restricted"
+  },
   "scripts": {
     "build": "tsc",
     "test": "node --test dist/tests/*.test.js",

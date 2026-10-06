@@ -345,12 +345,27 @@ fi
           pkg.scripts = {};
         }
         let modified = false;
+        if (!pkg.scripts["ai:save"]) {
+          pkg.scripts["ai:save"] = "agentdrop save";
+          modified = true;
+        }
         if (!pkg.scripts["ai:resume"]) {
           pkg.scripts["ai:resume"] = "agentdrop load";
           modified = true;
         }
         if (!pkg.scripts["ai:status"]) {
           pkg.scripts["ai:status"] = "agentdrop status";
+          modified = true;
+        }
+        if (!pkg.scripts["ai:ui"]) {
+          pkg.scripts["ai:ui"] = "agentdrop ui";
+          modified = true;
+        }
+        if (!pkg.scripts["postinstall"]) {
+          pkg.scripts["postinstall"] = "agentdrop hook install";
+          modified = true;
+        } else if (!pkg.scripts["postinstall"].includes("agentdrop")) {
+          pkg.scripts["postinstall"] += " && agentdrop hook install";
           modified = true;
         }
         if (modified) {

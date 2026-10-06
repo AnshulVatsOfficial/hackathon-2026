@@ -7,11 +7,21 @@
   "bin": {
     "agentdrop": "./bin/agentdrop.js"
   },
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "publishConfig": {
+    "access": "restricted"
+  },
   "scripts": {
     "build": "tsc",
     "test": "node --test dist/tests/*.test.js",
     "ai:resume": "agentdrop load",
-    "ai:status": "agentdrop status"
+    "ai:status": "agentdrop status",
+    "ai:save": "agentdrop save",
+    "ai:ui": "agentdrop ui",
+    "postinstall": "agentdrop hook install"
   },
   "dependencies": {
     "@agentdrop/core": "*",

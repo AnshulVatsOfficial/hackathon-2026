@@ -1,8 +1,9 @@
 # AI Context Handover
 
 > **AgentDrop Asynchronous Context Handoff**  
-**Author:** Divyanshi_Bansal  
-**Branch:** `master` | **Commit:** `7fff519` | **Source Agent:** `antigravity`
+**Author:** Shekhar Aggarwal  
+**Repository:** https://github.com/AnshulVatsOfficial/hackathon-2026.git  
+**Branch:** `main` | **Commit:** `ca099dc` | **Source Agent:** `antigravity`
 
 ---
 

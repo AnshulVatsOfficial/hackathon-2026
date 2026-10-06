@@ -9,6 +9,21 @@ import os from "node:os";
 import { AgentAdapter, ExtractedSession, RestoreResult, SessionSummary } from "../AgentAdapter.js";
 import { AiCapsule } from "../../capsule/schema.js";
 
+function cleanPromptText(raw: string): string {
+  if (!raw) return "";
+  let text = raw;
+  const reqMatch = text.match(/<USER_REQUEST>([\s\S]*?)<\/USER_REQUEST>/i);
+  if (reqMatch && reqMatch[1]) {
+    text = reqMatch[1].trim();
+  } else {
+    text = text.replace(/<ADDITIONAL_METADATA>[\s\S]*?<\/ADDITIONAL_METADATA>/gi, "");
+    text = text.replace(/<USER_SETTINGS_CHANGE>[\s\S]*?<\/USER_SETTINGS_CHANGE>/gi, "");
+    text = text.replace(/<PLAN>[\s\S]*?<\/PLAN>/gi, "");
+    text = text.replace(/<\/?USER_REQUEST>/gi, "");
+  }
+  return text.trim() || raw.trim();
+}
+
 export class AntigravityAdapter implements AgentAdapter {
   public readonly id = "antigravity" as const;
   public readonly displayName = "Google Antigravity";
@@ -62,7 +77,7 @@ export class AntigravityAdapter implements AgentAdapter {
               try {
                 const step = JSON.parse(line);
                 if (step.source === "USER_EXPLICIT" && step.content) {
-                  const rawPrompt = step.content.trim();
+                  const rawPrompt = cleanPromptText(step.content);
                   title = rawPrompt.length > 80 ? rawPrompt.slice(0, 77) + "..." : rawPrompt;
                   break;
                 }
@@ -117,9 +132,10 @@ export class AntigravityAdapter implements AgentAdapter {
           cleanedLines.push(JSON.stringify(step));
 
           const role: "user" | "assistant" = step.source === "USER_EXPLICIT" ? "user" : "assistant";
+          const turnContent = role === "user" ? cleanPromptText(step.content || "") : (step.content || "");
 
-          if (role === "user" && title.startsWith("Session ") && step.content) {
-            title = step.content.trim().slice(0, 100);
+          if (role === "user" && title.startsWith("Session ") && turnContent) {
+            title = turnContent.slice(0, 100);
           }
 
           let toolSummary: string | undefined;
@@ -130,7 +146,7 @@ export class AntigravityAdapter implements AgentAdapter {
           turns.push({
             role,
             timestamp: step.created_at || new Date().toISOString(),
-            content: step.content || "",
+            content: turnContent,
             toolSummary
           });
         } catch {
