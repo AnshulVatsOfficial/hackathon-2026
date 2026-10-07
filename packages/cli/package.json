@@ -1,6 +1,6 @@
 {
   "name": "agentdrop-portability-cli",
-  "version": "1.0.10",
+  "version": "1.0.14",
   "description": "Standalone CLI companion for AgentDrop",
   "main": "dist/src/index.js",
   "type": "module",
@@ -16,6 +16,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "test": "node --test dist/tests/*.test.js",
     "ai:resume": "agentdrop load",
     "ai:status": "agentdrop status",
@@ -24,7 +25,7 @@
     "postinstall": "agentdrop hook install"
   },
   "dependencies": {
-    "agentdrop-portability-core": "^1.0.7",
+    "agentdrop-portability-core": "1.0.9",
     "@types/qrcode": "^1.5.6",
     "qrcode": "^1.5.4"
   },

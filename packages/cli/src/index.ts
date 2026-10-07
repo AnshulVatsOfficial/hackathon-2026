@@ -22,7 +22,18 @@ import {
 
 import { DashboardServer } from "./ui.js";
 
-const CLI_VERSION = "1.0.9";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+let CLI_VERSION = "1.0.11";
+try {
+  const pkg = require("../../package.json");
+  CLI_VERSION = pkg.version || CLI_VERSION;
+} catch {
+  try {
+    const pkg = require("../../../package.json");
+    CLI_VERSION = pkg.version || CLI_VERSION;
+  } catch {}
+}
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
