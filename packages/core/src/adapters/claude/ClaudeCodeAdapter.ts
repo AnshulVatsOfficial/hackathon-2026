@@ -33,7 +33,7 @@ export class ClaudeCodeAdapter implements AgentAdapter {
     }
   }
 
-  public async listRecentSessions(): Promise<SessionSummary[]> {
+  public async listRecentSessions(targetWorkspacePath?: string): Promise<SessionSummary[]> {
     const projDir = this.getProjectsDir();
     const sessions: SessionSummary[] = [];
 
@@ -91,6 +91,14 @@ export class ClaudeCodeAdapter implements AgentAdapter {
       }
 
       sessions.sort((a, b) => b.lastActive.getTime() - a.lastActive.getTime());
+
+      if (targetWorkspacePath) {
+        const normTarget = path.normalize(targetWorkspacePath).toLowerCase();
+        const matching = sessions.filter(s => s.workspaceHint && normTarget.includes(s.workspaceHint.toLowerCase()));
+        if (matching.length > 0) {
+          return matching;
+        }
+      }
     } catch {
       // Base directory missing
     }

@@ -5,7 +5,7 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@agentdrop/core": ["../core/dist/src/index.d.ts"]
+      "agentdrop-portability-core": ["../core/dist/src/index.d.ts"]
     }
   },
   "include": ["src/**/*", "tests/**/*"]

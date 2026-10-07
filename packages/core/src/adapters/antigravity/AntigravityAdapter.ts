@@ -24,6 +24,33 @@ function cleanPromptText(raw: string): string {
   return text.trim() || raw.trim();
 }
 
+function normalizePath(p: string): string {
+  return path.normalize(p).toLowerCase().replace(/[\/\\]+$/, "");
+}
+
+function isWorkspaceMatch(hint: string | undefined, target: string): boolean {
+  if (!hint || !target) return false;
+  const normHint = normalizePath(hint);
+  const normTarget = normalizePath(target);
+  return normHint === normTarget || normTarget.startsWith(normHint) || normHint.startsWith(normTarget);
+}
+
+function extractWorkspaceHintFromTranscript(content: string): string | undefined {
+  if (!content) return undefined;
+  const match = content.match(/Active Workspaces:\s*\r?\n\s*-\s*([^\r\n]+)/i) ||
+                content.match(/Command Working Directory:\s*([^\r\n]+)/i) ||
+                content.match(/Directory:\s*([^\r\n]+)/i);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  const cwdMatch = content.match(/"Cwd":\s*"([^"]+)"/i) || content.match(/"AbsolutePath":\s*"([^"]+)"/i);
+  if (cwdMatch && cwdMatch[1]) {
+    const raw = cwdMatch[1].replace(/\\\\/g, "\\");
+    return raw.includes("\\") || raw.includes("/") ? (raw.endsWith(".ts") || raw.endsWith(".js") ? path.dirname(raw) : raw) : raw;
+  }
+  return undefined;
+}
+
 export class AntigravityAdapter implements AgentAdapter {
   public readonly id = "antigravity" as const;
   public readonly displayName = "Google Antigravity";
@@ -48,7 +75,7 @@ export class AntigravityAdapter implements AgentAdapter {
     }
   }
 
-  public async listRecentSessions(): Promise<SessionSummary[]> {
+  public async listRecentSessions(targetWorkspacePath?: string): Promise<SessionSummary[]> {
     const brainDir = this.getBrainDir();
     const sessions: SessionSummary[] = [];
 
@@ -66,11 +93,13 @@ export class AntigravityAdapter implements AgentAdapter {
 
           let title = `Session ${sessionId.slice(0, 8)}`;
           let turnCount = 0;
+          let workspaceHint: string | undefined;
 
           try {
             const content = await fs.readFile(transcriptPath, "utf-8");
             const lines = content.split("\n").filter(l => l.trim().length > 0);
             turnCount = lines.length;
+            workspaceHint = extractWorkspaceHintFromTranscript(content);
 
             // Find first user input for title
             for (const line of lines) {
@@ -93,6 +122,7 @@ export class AntigravityAdapter implements AgentAdapter {
             sessionId,
             title,
             lastActive: stat.mtime,
+            workspaceHint,
             turnCount
           });
         } catch {
@@ -102,6 +132,13 @@ export class AntigravityAdapter implements AgentAdapter {
 
       // Sort by most recently modified
       sessions.sort((a, b) => b.lastActive.getTime() - a.lastActive.getTime());
+
+      if (targetWorkspacePath) {
+        const matching = sessions.filter(s => isWorkspaceMatch(s.workspaceHint, targetWorkspacePath));
+        if (matching.length > 0) {
+          return matching;
+        }
+      }
     } catch {
       // Directory listing failed
     }

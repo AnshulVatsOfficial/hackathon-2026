@@ -42,8 +42,9 @@ export interface AgentAdapter {
 
   /**
    * Lists available in-flight or completed sessions for this agent.
+   * If targetWorkspacePath is provided, returns sessions matching the workspace or ranked by workspace relevance.
    */
-  listRecentSessions(): Promise<SessionSummary[]>;
+  listRecentSessions(targetWorkspacePath?: string): Promise<SessionSummary[]>;
 
   /**
    * Extracts conversation turns and artifacts from a session.

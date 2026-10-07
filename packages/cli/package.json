@@ -1,18 +1,18 @@
 {
-  "name": "@agentdrop/cli",
-  "version": "1.0.0",
+  "name": "agentdrop-portability-cli",
+  "version": "1.0.3",
   "description": "Standalone CLI companion for AgentDrop",
   "main": "dist/src/index.js",
   "type": "module",
   "bin": {
-    "agentdrop": "./bin/agentdrop.js"
+    "agentdrop": "bin/agentdrop.js"
   },
   "files": [
     "dist",
     "bin"
   ],
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "scripts": {
     "build": "tsc",
@@ -24,7 +24,7 @@
     "postinstall": "agentdrop hook install"
   },
   "dependencies": {
-    "@agentdrop/core": "*",
+    "agentdrop-portability-core": "^1.0.1",
     "@types/qrcode": "^1.5.6",
     "qrcode": "^1.5.4"
   },

@@ -20,7 +20,7 @@ import {
   QRPairingPayload,
   AiCapsule,
   ContextSyncManager
-} from "@agentdrop/core";
+} from "agentdrop-portability-core";
 
 export class DashboardServer {
   private server: http.Server | null = null;

@@ -18,7 +18,7 @@ import {
   QRPairingPayload,
   ContextSyncManager,
   GoldenDemoFixture
-} from "@agentdrop/core";
+} from "agentdrop-portability-core";
 
 import { DashboardServer } from "./ui.js";
 
@@ -313,11 +313,11 @@ async function handleSave(args: string[]): Promise<void> {
     const antigravity = new AntigravityAdapter();
     const claude = new ClaudeCodeAdapter();
 
-    const agSessions = (await antigravity.isInstalled()) ? await antigravity.listRecentSessions() : [];
-    const claudeSessions = (await claude.isInstalled()) ? await claude.listRecentSessions() : [];
+    const agSessions = (await antigravity.isInstalled()) ? await antigravity.listRecentSessions(workspaceRoot) : [];
+    const claudeSessions = (await claude.isInstalled()) ? await claude.listRecentSessions(workspaceRoot) : [];
 
     if (agSessions.length === 0 && claudeSessions.length === 0) {
-      console.log(`[!] No active local sessions found in Antigravity or Claude Code.`);
+      console.log(`[!] No active local sessions found matching workspace: ${workspaceRoot}`);
       console.log(`[*] Tip: Run 'agentdrop save --demo' to test the Git handoff with the verified golden demo fixture!`);
       process.exit(0);
     }
