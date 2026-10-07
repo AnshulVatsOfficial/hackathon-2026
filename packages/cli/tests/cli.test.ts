@@ -11,6 +11,20 @@ import path from "node:path";
 describe("AgentDrop CLI (beam & listen)", () => {
   const cliBin = path.resolve("./bin/agentdrop.js");
 
+  it("should display version on --version or -v", async () => {
+    const proc = spawn(process.execPath, [cliBin, "--version"]);
+    let stdout = "";
+    proc.stdout.on("data", chunk => (stdout += chunk));
+    await new Promise(resolve => proc.on("close", resolve));
+    assert.ok(stdout.includes("agentdrop-portability-cli v1.0.4"));
+
+    const procV = spawn(process.execPath, [cliBin, "-v"]);
+    let stdoutV = "";
+    procV.stdout.on("data", chunk => (stdoutV += chunk));
+    await new Promise(resolve => procV.on("close", resolve));
+    assert.ok(stdoutV.includes("agentdrop-portability-cli v1.0.4"));
+  });
+
   it("should display usage on --help", async () => {
     const proc = spawn(process.execPath, [cliBin, "--help"]);
     let stdout = "";

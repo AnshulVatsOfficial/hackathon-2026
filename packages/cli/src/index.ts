@@ -22,12 +22,19 @@ import {
 
 import { DashboardServer } from "./ui.js";
 
+const CLI_VERSION = "1.0.4";
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args[0] || "--help";
 
+  if (command === "--version" || command === "-v" || command === "version") {
+    console.log(`agentdrop-portability-cli v${CLI_VERSION}`);
+    return;
+  }
+
   console.log(`\n======================================================`);
-  console.log(`  AgentDrop — AI Context Portability Layer (v1.0.0)`);
+  console.log(`  AgentDrop — AI Context Portability Layer (v${CLI_VERSION})`);
   console.log(`  "It doesn't move a chat window. It moves context."`);
   console.log(`======================================================\n`);
 
@@ -490,6 +497,7 @@ function printUsage(): void {
   console.log(`  agentdrop beam [--demo]    Beam session over local network (P2P mode)`);
   console.log(`  agentdrop listen <token>   Receive incoming AI handover session over local network`);
   console.log(`  agentdrop ui [port]        Launch interactive Web UI dashboard (default: 3333)`);
+  console.log(`  agentdrop --version (-v)   Print installed CLI version`);
   console.log(`  agentdrop --help           Show this help information\n`);
 }
 

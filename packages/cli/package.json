@@ -1,6 +1,6 @@
 {
   "name": "agentdrop-portability-cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Standalone CLI companion for AgentDrop",
   "main": "dist/src/index.js",
   "type": "module",
