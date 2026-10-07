@@ -22,7 +22,7 @@ import {
 
 import { DashboardServer } from "./ui.js";
 
-const CLI_VERSION = "1.0.4";
+const CLI_VERSION = "1.0.9";
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);

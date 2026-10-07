@@ -94,10 +94,13 @@ export class ClaudeCodeAdapter implements AgentAdapter {
 
       if (targetWorkspacePath) {
         const normTarget = path.normalize(targetWorkspacePath).toLowerCase();
-        const matching = sessions.filter(s => s.workspaceHint && normTarget.includes(s.workspaceHint.toLowerCase()));
-        if (matching.length > 0) {
-          return matching;
-        }
+        return sessions.filter(s => {
+          if (!s.workspaceHint) return false;
+          const hint = s.workspaceHint.toLowerCase();
+          const targetSlug = normTarget.replace(/[^a-z0-9]/g, "-");
+          const hintSlug = hint.replace(/[^a-z0-9]/g, "-");
+          return normTarget.includes(hint) || hint.includes(normTarget) || targetSlug.includes(hintSlug) || hintSlug.includes(targetSlug);
+        });
       }
     } catch {
       // Base directory missing

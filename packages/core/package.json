@@ -1,6 +1,6 @@
 {
   "name": "agentdrop-portability-core",
-  "version": "1.0.1",
+  "version": "1.0.7",
   "description": "Headless core engine for AgentDrop",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -29,7 +29,12 @@
     "test:capsule": "node --test dist/tests/capsule.test.js",
     "test:adapters": "node --test dist/tests/adapters.test.js",
     "test:p2p": "node --test dist/tests/p2p.test.js",
-    "test:e2e": "node --test dist/tests/e2e.test.js"
+    "test:e2e": "node --test dist/tests/e2e.test.js",
+    "ai:save": "agentdrop save",
+    "ai:resume": "agentdrop load",
+    "ai:status": "agentdrop status",
+    "ai:ui": "agentdrop ui",
+    "postinstall": "agentdrop hook install"
   },
   "dependencies": {},
   "devDependencies": {

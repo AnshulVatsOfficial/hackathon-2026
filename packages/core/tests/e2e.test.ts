@@ -89,8 +89,8 @@ describe("AgentDrop End-to-End Integration (test:e2e)", () => {
       gitDiffStat: "1 file changed, 1 insertion(+)"
     });
 
-    assert.strictEqual(handover.objective, "Fix refresh-token race condition");
-    assert.ok(handover.primedResumePrompt.includes("Fix refresh-token race condition"));
+    assert.strictEqual(handover.objective, "Make sure Node 20+ runtime is targeted and run tests.");
+    assert.ok(handover.primedResumePrompt.includes("Make sure Node 20+ runtime is targeted and run tests."));
     assert.ok(handover.primedResumePrompt.includes("AssertionError"));
 
     // 5. Pack Capsule with Universal Security Scan (Invariant 3)
@@ -125,7 +125,7 @@ describe("AgentDrop End-to-End Integration (test:e2e)", () => {
       const unpackResult = await receiver.acceptHandover();
 
       // 9. Verify Final Handover State on Machine B
-      assert.strictEqual(unpackResult.capsule.handover.objective, "Fix refresh-token race condition");
+      assert.strictEqual(unpackResult.capsule.handover.objective, "Make sure Node 20+ runtime is targeted and run tests.");
       assert.strictEqual(unpackResult.capsule.git.identity.name, identity.name);
       assert.strictEqual(unpackResult.capsule.conversation?.totalTurns, 4);
       assert.ok(unpackResult.validatedFilePaths.length > 0);

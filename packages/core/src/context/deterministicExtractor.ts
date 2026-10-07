@@ -21,9 +21,14 @@ export class DeterministicExtractor {
    * Mode A: Deterministic Offline (must never fail).
    */
   static extract(input: FallbackInput): AiHandoverState {
-    // 1. Determine Objective: prefer sessionTitle, fallback to first substantive user prompt
+    // 1. Determine Objective: prefer most recent user prompt, fallback to sessionTitle or first substantive user prompt
     let objective = "Active Coding Session";
-    if (input.sessionTitle && input.sessionTitle.trim().length > 3) {
+    if (input.recentUserPrompts && input.recentUserPrompts.length > 0) {
+      const lastPrompt = input.recentUserPrompts[input.recentUserPrompts.length - 1].trim();
+      if (lastPrompt.length > 0) {
+        objective = lastPrompt.length > 120 ? lastPrompt.slice(0, 117) + "..." : lastPrompt;
+      }
+    } else if (input.sessionTitle && input.sessionTitle.trim().length > 3) {
       objective = input.sessionTitle.trim();
     } else if (input.firstSubstantiveUserPrompt && input.firstSubstantiveUserPrompt.trim().length > 0) {
       const cleanPrompt = input.firstSubstantiveUserPrompt.trim();

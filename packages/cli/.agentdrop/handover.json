@@ -1,13 +1,13 @@
 {
   "version": "1.0.0",
   "capsuleId": "demo-golden-fixture-uuid",
-  "createdAt": "2026-10-07T05:42:05.308Z",
+  "createdAt": "2026-10-07T10:24:13.363Z",
   "sourceAgent": "antigravity",
   "author": "Shekhar Aggarwal",
   "git": {
     "repository": "https://github.com/AnshulVatsOfficial/hackathon-2026.git",
     "branch": "main",
-    "commitSha": "75236085a039269826f18da80c5e977abd8fac7a",
+    "commitSha": "8ab294cc148a7f5bbab2ea998db7649746f46f83",
     "contextKey": "a7b82e7da3723c20"
   },
   "handover": {

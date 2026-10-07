@@ -23,6 +23,11 @@ describe("Agent Adapters (Antigravity & Claude Code)", () => {
 
     const mockTranscript = [
       JSON.stringify({
+        step_index: 0,
+        source: "SYSTEM",
+        content: "Active Workspaces:\n - /mock/project/auth-service"
+      }),
+      JSON.stringify({
         step_index: 1,
         source: "USER_EXPLICIT",
         content: "Fix JWT expiration bug in AuthController.ts",
@@ -84,6 +89,15 @@ describe("Agent Adapters (Antigravity & Claude Code)", () => {
     const modelTurn = extracted.turns[1];
     assert.strictEqual((modelTurn as any).thinking, undefined);
     assert.strictEqual(JSON.stringify(extracted).includes("TOP_SECRET_INTERNAL"), false);
+  });
+
+  it("should isolate sessions by workspace and return empty list when no session matches target workspace", async () => {
+    const adapter = new AntigravityAdapter(mockAntigravityDir);
+    const matching = await adapter.listRecentSessions("/mock/project/auth-service");
+    assert.strictEqual(matching.length, 1);
+
+    const nonMatching = await adapter.listRecentSessions("/mock/project/different-unrelated-workspace");
+    assert.strictEqual(nonMatching.length, 0);
   });
 
   it("should discover and extract Claude Code project sessions", async () => {

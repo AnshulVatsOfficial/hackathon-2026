@@ -25,29 +25,92 @@ function cleanPromptText(raw: string): string {
 }
 
 function normalizePath(p: string): string {
-  return path.normalize(p).toLowerCase().replace(/[\/\\]+$/, "");
+  if (!p) return "";
+  let clean = p.trim();
+  if (clean.startsWith('"') && clean.endsWith('"')) {
+    clean = clean.slice(1, -1);
+  }
+  return path.normalize(clean).toLowerCase().replace(/[\/\\]+$/, "");
 }
 
-function isWorkspaceMatch(hint: string | undefined, target: string): boolean {
-  if (!hint || !target) return false;
-  const normHint = normalizePath(hint);
+function isWorkspaceMatch(hints: string | string[] | undefined, target: string): boolean {
+  if (!hints || !target) return false;
   const normTarget = normalizePath(target);
-  return normHint === normTarget || normTarget.startsWith(normHint) || normHint.startsWith(normTarget);
+  const sepNormTarget = normTarget + path.sep;
+
+  const hintList = Array.isArray(hints) ? hints : [hints];
+
+  for (const hint of hintList) {
+    const normHint = normalizePath(hint);
+    if (!normHint) continue;
+    if (normHint === normTarget) return true;
+
+    const sepNormHint = normHint + path.sep;
+    if (normTarget.startsWith(sepNormHint) || normHint.startsWith(sepNormTarget)) {
+      return true;
+    }
+
+    // Check shared project directory root
+    const hintParts = normHint.split(path.sep).filter(Boolean);
+    const targetParts = normTarget.split(path.sep).filter(Boolean);
+    let commonDepth = 0;
+    for (let i = 0; i < Math.min(hintParts.length, targetParts.length); i++) {
+      if (hintParts[i] === targetParts[i]) {
+        commonDepth++;
+      } else {
+        break;
+      }
+    }
+    if (commonDepth >= 5) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
-function extractWorkspaceHintFromTranscript(content: string): string | undefined {
-  if (!content) return undefined;
-  const match = content.match(/Active Workspaces:\s*\r?\n\s*-\s*([^\r\n]+)/i) ||
-                content.match(/Command Working Directory:\s*([^\r\n]+)/i) ||
-                content.match(/Directory:\s*([^\r\n]+)/i);
-  if (match && match[1]) {
-    return match[1].trim();
+function extractPrimaryWorkspaceHint(lines: string[]): string | undefined {
+  // Read initial system instructions (step index 0-10) for explicit active workspace or command working directory
+  for (let i = 0; i < Math.min(10, lines.length); i++) {
+    let text = lines[i];
+    try {
+      const step = JSON.parse(lines[i]);
+      if (typeof step.content === "string") {
+        text = step.content;
+      }
+    } catch {}
+
+    if (typeof text === "string") {
+      const match = text.match(/Active Workspaces:\s*(?:\r?\n)?\s*-\s*([^\r\n]+)/i) ||
+                    text.match(/Command Working Directory:\s*([^\r\n]+)/i) ||
+                    text.match(/Directory:\s*([^\r\n]+)/i);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
   }
-  const cwdMatch = content.match(/"Cwd":\s*"([^"]+)"/i) || content.match(/"AbsolutePath":\s*"([^"]+)"/i);
-  if (cwdMatch && cwdMatch[1]) {
-    const raw = cwdMatch[1].replace(/\\\\/g, "\\");
-    return raw.includes("\\") || raw.includes("/") ? (raw.endsWith(".ts") || raw.endsWith(".js") ? path.dirname(raw) : raw) : raw;
+
+  // Fallback: first tool call Cwd or SearchDirectory
+  for (const line of lines) {
+    try {
+      const step = JSON.parse(line);
+      if (step.tool_calls && Array.isArray(step.tool_calls)) {
+        for (const tc of step.tool_calls) {
+          const args = tc.arguments || tc.args;
+          if (args && typeof args === "object") {
+            const dir = args.Cwd || args.SearchDirectory;
+            if (dir && typeof dir === "string") {
+              const clean = dir.trim().replace(/^"|"$/g, "");
+              if (!clean.includes("antigravity-cli") && !clean.includes("temp-mock")) {
+                return clean;
+              }
+            }
+          }
+        }
+      }
+    } catch {}
   }
+
   return undefined;
 }
 
@@ -88,8 +151,16 @@ export class AntigravityAdapter implements AgentAdapter {
         const sessionPath = path.join(brainDir, sessionId);
 
         try {
-          const stat = await fs.stat(sessionPath);
+          const folderStat = await fs.stat(sessionPath);
           const transcriptPath = path.join(sessionPath, ".system_generated", "logs", "transcript.jsonl");
+
+          let lastActive = folderStat.mtime;
+          try {
+            const transcriptStat = await fs.stat(transcriptPath);
+            lastActive = transcriptStat.mtime; // Use transcript file mtime for accurate recency
+          } catch {
+            // Transcript file missing or unreadable
+          }
 
           let title = `Session ${sessionId.slice(0, 8)}`;
           let turnCount = 0;
@@ -99,29 +170,28 @@ export class AntigravityAdapter implements AgentAdapter {
             const content = await fs.readFile(transcriptPath, "utf-8");
             const lines = content.split("\n").filter(l => l.trim().length > 0);
             turnCount = lines.length;
-            workspaceHint = extractWorkspaceHintFromTranscript(content);
 
-            // Find first user input for title
+            workspaceHint = extractPrimaryWorkspaceHint(lines);
+
             for (const line of lines) {
               try {
                 const step = JSON.parse(line);
-                if (step.source === "USER_EXPLICIT" && step.content) {
+                if (step.source === "USER_EXPLICIT" && step.content && title.startsWith("Session ")) {
                   const rawPrompt = cleanPromptText(step.content);
                   title = rawPrompt.length > 80 ? rawPrompt.slice(0, 77) + "..." : rawPrompt;
-                  break;
                 }
               } catch {
-                // Skip invalid JSON lines
+                // Skip unparseable lines
               }
             }
           } catch {
-            // Transcript not yet generated or empty
+            // Transcript unreadable
           }
 
           sessions.push({
             sessionId,
             title,
-            lastActive: stat.mtime,
+            lastActive,
             workspaceHint,
             turnCount
           });
@@ -130,14 +200,11 @@ export class AntigravityAdapter implements AgentAdapter {
         }
       }
 
-      // Sort by most recently modified
+      // Sort by most recently modified transcript
       sessions.sort((a, b) => b.lastActive.getTime() - a.lastActive.getTime());
 
       if (targetWorkspacePath) {
-        const matching = sessions.filter(s => isWorkspaceMatch(s.workspaceHint, targetWorkspacePath));
-        if (matching.length > 0) {
-          return matching;
-        }
+        return sessions.filter(s => isWorkspaceMatch(s.workspaceHint, targetWorkspacePath));
       }
     } catch {
       // Directory listing failed
@@ -167,6 +234,8 @@ export class AntigravityAdapter implements AgentAdapter {
           // Invariant Section 9: strip thinking field
           delete step.thinking;
           cleanedLines.push(JSON.stringify(step));
+
+          if (step.source === "SYSTEM") continue;
 
           const role: "user" | "assistant" = step.source === "USER_EXPLICIT" ? "user" : "assistant";
           const turnContent = role === "user" ? cleanPromptText(step.content || "") : (step.content || "");
