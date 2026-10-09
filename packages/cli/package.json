@@ -1,6 +1,6 @@
 {
   "name": "agentdrop-portability-cli",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Standalone CLI companion for AgentDrop",
   "main": "dist/src/index.js",
   "type": "module",
@@ -8,14 +8,15 @@
     "agentdrop": "bin/agentdrop.js"
   },
   "files": [
-    "dist",
-    "bin"
+    "dist/src",
+    "bin",
+    "README.md"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"const fs=require('fs'),path=require('path');function r(d){if(!fs.existsSync(d))return;for(const e of fs.readdirSync(d,{withFileTypes:true})){const p=path.join(d,e.name);if(e.isDirectory())r(p);else if(p.endsWith('.map'))fs.unlinkSync(p);}}r('./dist/src');\"",
     "prepublishOnly": "npm run build",
     "test": "node --test dist/tests/*.test.js",
     "ai:resume": "agentdrop load",
@@ -25,7 +26,7 @@
     "postinstall": "agentdrop hook install"
   },
   "dependencies": {
-    "agentdrop-portability-core": "1.0.9",
+    "agentdrop-portability-core": "1.0.10",
     "@types/qrcode": "^1.5.6",
     "qrcode": "^1.5.4"
   },

@@ -1,6 +1,6 @@
 {
   "name": "agentdrop-portability-core",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Headless core engine for AgentDrop",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -13,14 +13,14 @@
     }
   },
   "files": [
-    "dist",
-    "fixtures"
+    "dist/src",
+    "README.md"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"const fs=require('fs'),path=require('path');function r(d){if(!fs.existsSync(d))return;for(const e of fs.readdirSync(d,{withFileTypes:true})){const p=path.join(d,e.name);if(e.isDirectory())r(p);else if(p.endsWith('.map'))fs.unlinkSync(p);}}r('./dist/src');\"",
     "test": "node --test dist/tests/*.test.js",
     "test:security": "node --test dist/tests/security.test.js",
     "test:validator": "node --test dist/tests/validator.test.js",

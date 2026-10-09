@@ -16,13 +16,13 @@ describe("AgentDrop CLI (beam & listen)", () => {
     let stdout = "";
     proc.stdout.on("data", chunk => (stdout += chunk));
     await new Promise(resolve => proc.on("close", resolve));
-    assert.ok(stdout.includes("agentdrop-portability-cli v1.0.14"));
+    assert.ok(stdout.includes("agentdrop-portability-cli v1.0.15"));
 
     const procV = spawn(process.execPath, [cliBin, "-v"]);
     let stdoutV = "";
     procV.stdout.on("data", chunk => (stdoutV += chunk));
     await new Promise(resolve => procV.on("close", resolve));
-    assert.ok(stdoutV.includes("agentdrop-portability-cli v1.0.14"));
+    assert.ok(stdoutV.includes("agentdrop-portability-cli v1.0.15"));
   });
 
   it("should display usage on --help", async () => {

@@ -1,0 +1,10 @@
+# Exclude TypeScript source code, test files, and fixtures
+*.ts
+*.tsx
+*.map
+*.tsbuildinfo
+src/
+tests/
+fixtures/
+dist/tests/
+node_modules/
