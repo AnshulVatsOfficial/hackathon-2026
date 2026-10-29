@@ -377,7 +377,7 @@ fi
           if (!pkg.devDependencies) {
             pkg.devDependencies = {};
           }
-          pkg.devDependencies["agentdrop-portability-cli"] = "^1.0.15";
+          pkg.devDependencies["agentdrop-portability-cli"] = "^1.0.16";
           modified = true;
         }
 
