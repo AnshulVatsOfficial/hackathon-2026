@@ -283,10 +283,13 @@ When continuing unfinished work or answering questions about active tasks in thi
 if [ -f ".agentdrop/handover.json" ]; then
   if command -v agentdrop >/dev/null 2>&1; then
     agentdrop status
+  elif [ -f "./node_modules/.bin/agentdrop" ]; then
+    ./node_modules/.bin/agentdrop status
   elif command -v npx >/dev/null 2>&1; then
-    npx --no-install agentdrop status 2>/dev/null || true
+    npx --no-install agentdrop status 2>/dev/null || npx agentdrop-portability-cli status 2>/dev/null || true
   else
     echo "⚡ [AgentDrop] Active AI handover found in .agentdrop/HANDOVER.md"
+    echo "   Run 'npm run ai:status' to view the full handover card."
   fi
 fi
 `;
@@ -361,13 +364,27 @@ fi
           pkg.scripts["ai:ui"] = "agentdrop ui";
           modified = true;
         }
+
+        const safePostinstallCmd = "agentdrop hook install || npx --no-install agentdrop hook install || true";
         if (!pkg.scripts["postinstall"]) {
-          pkg.scripts["postinstall"] = "agentdrop hook install";
+          pkg.scripts["postinstall"] = safePostinstallCmd;
           modified = true;
-        } else if (!pkg.scripts["postinstall"].includes("agentdrop")) {
-          pkg.scripts["postinstall"] += " && agentdrop hook install";
+        } else if (!pkg.scripts["postinstall"].includes("agentdrop hook install")) {
+          pkg.scripts["postinstall"] += ` && (${safePostinstallCmd})`;
           modified = true;
         }
+
+        // Ensure agentdrop-portability-cli is recorded in devDependencies so Machine 2 installs it on 'npm install'
+        const hasCliDep = (pkg.dependencies && (pkg.dependencies["agentdrop-portability-cli"] || pkg.dependencies["@agentdrop/cli"])) ||
+                          (pkg.devDependencies && (pkg.devDependencies["agentdrop-portability-cli"] || pkg.devDependencies["@agentdrop/cli"]));
+        if (!hasCliDep) {
+          if (!pkg.devDependencies) {
+            pkg.devDependencies = {};
+          }
+          pkg.devDependencies["agentdrop-portability-cli"] = "^1.0.15";
+          modified = true;
+        }
+
         if (modified) {
           await fs.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
           anyModified = true;

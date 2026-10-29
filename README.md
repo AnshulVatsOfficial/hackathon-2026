@@ -46,7 +46,7 @@ AgentDrop binds the AI agent's working state directly to the **Git & GitHub life
   │  * D2 on Machine M2 clones the repo and checks out the branch *
   ▼
 [Developer D2 on Machine M2]
-  │  Runs: agentdrop status (or opens VS Code)
+  │  Runs: npm run ai:status (or npx agentdrop status / agentdrop status)
   ▼
 [Active AI Handover Detected Instantly!]
   ├── Objective: Fix refresh-token race condition
@@ -139,16 +139,23 @@ git add .agentdrop && git commit -m "chore: save AI handover" && git push origin
 ```
 
 ### 2. Developer 2: Inspect Active Context on Machine 2
-Clone the repository and check out the branch on a different machine:
+Clone the repository, check out the branch on a different machine, and inspect context:
 ```bash
-node packages/cli/bin/agentdrop.js status
+npm install
+npm run ai:status
+# Or if installed globally (npm i -g agentdrop-portability-cli):
+agentdrop status
+# Or via npx without global install:
+npx agentdrop status
 ```
 *Outputs the AI Handover Card with Objective, Decisions, Current Roadblock, and the Primed Resume Prompt.*
 
 ### 3. Load the Resume Prompt
 Emit the primed prompt directly to feed into any AI coding tool:
 ```bash
-node packages/cli/bin/agentdrop.js load
+npm run ai:resume
+# Or:
+agentdrop load
 ```
 
 ### 4. Interactive Web UI Dashboard

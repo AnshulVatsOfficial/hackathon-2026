@@ -387,7 +387,8 @@ async function handleSave(args: string[]): Promise<void> {
   console.log(`    git add .agentdrop && git commit -m "chore: save AI handover" && git push`);
   console.log(`\n[*] ON MACHINE 2:`);
   console.log(`    When Developer 2 clones or checks out '${saveResult.identity.branch}',`);
-  console.log(`    run 'agentdrop status' or open VS Code to resume immediately without re-prompting!\n`);
+  console.log(`    run 'npm run ai:status' (or 'npx agentdrop status') to inspect active handover!`);
+  console.log(`    run 'npm run ai:resume' (or 'npx agentdrop load') to emit the primed prompt.\n`);
 }
 
 async function handleStatus(): Promise<void> {
@@ -471,11 +472,11 @@ async function handleInit(): Promise<void> {
   console.log(`  Context Dir:    .agentdrop/`);
   console.log(`  AI Bridge:      ${res.agentBridgeUpdated ? "AGENTS.md updated (Turn-1 auto-ingestion active)" : "AGENTS.md already configured"}`);
   console.log(`  Git Hooks:      ${res.hooksInstalled.length > 0 ? res.hooksInstalled.join(", ") : "No .git directory found"}`);
-  console.log(`  package.json:   ${res.packageJsonUpdated ? "Added 'ai:resume' and 'ai:status' scripts" : "Scripts already present or no package.json"}`);
+  console.log(`  package.json:   ${res.packageJsonUpdated ? "Configured devDependencies, postinstall hook, and 'ai:*' scripts" : "Scripts already present or no package.json"}`);
   console.log(`======================================================\n`);
   console.log(`[*] NEXT STEPS:`);
   console.log(`    • Save an AI task:          agentdrop save (or agentdrop save --demo)`);
-  console.log(`    • Check status anytime:     agentdrop status`);
+  console.log(`    • Check status anytime:     npm run ai:status (or agentdrop status)`);
   console.log(`    • Resume task:              npm run ai:resume (or agentdrop load)\n`);
 }
 

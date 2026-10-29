@@ -167,10 +167,16 @@ describe("Git & Asynchronous Context Sync", () => {
     assert.ok(syncFs.existsSync(path.join(freshDir, "AGENTS.md")));
     assert.ok(syncFs.existsSync(path.join(freshDir, ".git", "hooks", "post-merge")));
 
-    // Verify package.json scripts
+    // Verify package.json scripts and devDependencies persistence
     const pkg = JSON.parse(syncFs.readFileSync(path.join(freshDir, "package.json"), "utf-8"));
     assert.strictEqual(pkg.scripts["ai:resume"], "agentdrop load");
     assert.strictEqual(pkg.scripts["ai:status"], "agentdrop status");
+    assert.ok(pkg.scripts["postinstall"].includes("agentdrop hook install"));
+    assert.ok(pkg.devDependencies["agentdrop-portability-cli"]);
+
+    // Verify hook script content contains local node_modules fallback
+    const hookContent = syncFs.readFileSync(path.join(freshDir, ".git", "hooks", "post-merge"), "utf-8");
+    assert.ok(hookContent.includes("./node_modules/.bin/agentdrop"));
 
     // Clean up
     syncFs.rmSync(freshDir, { recursive: true, force: true });
