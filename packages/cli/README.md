@@ -62,9 +62,8 @@ AgentDrop binds the AI agent's working memory directly to the **Git & GitHub lif
 - 🔄 **Git-Native Persistence**: Context handovers live directly inside `.agentdrop/` in your repository. They version-control alongside your code commits.
 - 🤖 **Universal Multi-Agent Support**: Out-of-the-box adapters for **Google Antigravity IDE**, **Claude Code**, **Cursor**, **Windsurf**, and **VS Code**.
 - 🔒 **Pre-AI Secret Scrubbing**: Pattern-based security scanner redacts API keys (`sk-`, `ghp_`, tokens, private keys, database URLs) and excludes sensitive files (`.env*`, `*.pem`, `*.key`).
-- ⚡ **Local Ephemeral P2P Streaming**: Transfer context directly between devices over local Wi-Fi / hotspot via ECDH + HKDF + 6-digit SAS verification code + AES-256-GCM encryption.
 - 🎯 **Smart Workspace Isolation**: Automatically isolates sessions per workspace directory depth so parallel project instances never leak.
-- 🌐 **Embedded Local Web Dashboard**: Built-in HTTP dashboard (`agentdrop ui`) for visual inspection of handovers, active sessions, and local pairing.
+- 🚀 **Pure NPM Package**: Zero native daemons or background web servers; runs everywhere standard Node.js and Git exist.
 
 ---
 
@@ -118,31 +117,28 @@ Outputs the loaded context contract summary and formats the primed resume prompt
 agentdrop load
 ```
 
-### `agentdrop beam` & `agentdrop listen`
-Direct offline P2P transfer over local network / Wi-Fi hotspot without committing to remote Git.
+### `agentdrop hook`
+Installs or uninstalls Git post-merge and post-checkout hooks that notify developers when an active AI context handover is pulled onto their machine.
 
 ```bash
-# On Machine A (Sender):
-agentdrop beam
-
-# On Machine B (Receiver):
-agentdrop listen <PAIRING_PAYLOAD>
+agentdrop hook install
+agentdrop hook uninstall
 ```
 
-### `agentdrop ui`
-Launches the interactive Web UI Dashboard locally on `http://localhost:3333`.
+### `agentdrop sessions`
+Discovers and lists in-flight and recent coding agent sessions across installed tools (Antigravity IDE, Claude Code).
 
 ```bash
-agentdrop ui
+agentdrop sessions
 ```
 
 ---
 
 ## 🔒 Security & Privacy Guarantees
 
-1. **Zero Cloud Leak**: AgentDrop operates local-first. Raw transcripts never leave your machine unless explicitly pushed to your private Git remote.
+1. **Zero Cloud Leak**: AgentDrop operates local-first. Raw transcripts never leave your machine unless explicitly committed to your repository.
 2. **Pre-Sanitization**: API keys (OpenAI, Google, GitHub, AWS, JWT), private keys, and sensitive environment variables are scrubbed before reaching any prompt or handover file.
-3. **P2P Encryption**: Direct local network streams use ephemeral ECDH key pairs with HKDF key derivation and AES-256-GCM authenticated encryption.
+3. **Boundary & Decompression Protection**: Strict segment-aware path validator rejects traversal attacks (`../`), absolute paths, and zip-bombs.
 
 ---
 
