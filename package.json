@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "npm run build --workspace=agentdrop-portability-core && npm run build --workspace=agentdrop-portability-cli",
     "test": "npm run test --workspace=agentdrop-portability-core && npm run test --workspace=agentdrop-portability-cli",
     "agentdrop": "node packages/cli/bin/agentdrop.js",
     "test:security": "npm run test:security --workspace=agentdrop-portability-core",
@@ -19,7 +19,6 @@
     "ai:save": "agentdrop save",
     "ai:resume": "agentdrop load",
     "ai:status": "agentdrop status",
-    "ai:ui": "agentdrop ui",
     "postinstall": "agentdrop hook install"
   },
   "devDependencies": {

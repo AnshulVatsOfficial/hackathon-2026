@@ -15,8 +15,8 @@ import {
   PreSanitizer,
   DeterministicExtractor,
   CapsulePackager,
-  AgentDropSender,
-  AgentDropReceiver,
+  CapsuleUnpacker,
+  ContextSyncManager,
   GitIdentity
 } from "../src/index.js";
 
@@ -94,7 +94,7 @@ describe("AgentDrop End-to-End Integration (test:e2e)", () => {
     assert.ok(handover.primedResumePrompt.includes("AssertionError"));
 
     // 5. Pack Capsule with Universal Security Scan (Invariant 3)
-    const { serialized } = CapsulePackager.pack({
+    const { capsule, serialized } = CapsulePackager.pack({
       tier: "full",
       sourceAgent: "antigravity",
       workspaceName: "cadence-api",
@@ -107,32 +107,21 @@ describe("AgentDrop End-to-End Integration (test:e2e)", () => {
       selectedFiles: mockGitSnapshot.untrackedSourceFiles
     });
 
-    // 6. Start Sender on Machine A
-    const sender = new AgentDropSender(serialized, "Anshul-Workstation");
-    const port = await sender.start(0);
+    // 6. Unpack & Validate
+    const unpackResult = CapsuleUnpacker.unpack(serialized);
+    assert.strictEqual(unpackResult.capsule.handover.objective, "Make sure Node 20+ runtime is targeted and run tests.");
+    assert.strictEqual(unpackResult.capsule.git.identity.name, identity.name);
+    assert.strictEqual(unpackResult.capsule.conversation?.totalTurns, 4);
 
-    try {
-      const qrPayload = sender.getPairingPayload("127.0.0.1");
+    // 7. Git-Native Persistence in Target Workspace
+    const saveResult = await ContextSyncManager.saveHandoff(stagingDir, capsule, { saveFullCapsule: true });
+    assert.strictEqual(saveResult.success, true);
+    assert.ok(saveResult.handoverPath.includes("handover.json"));
 
-      // 7. Receiver on Machine B initiates handshake
-      const receiver = new AgentDropReceiver(stagingDir, "Anshul-Laptop");
-      const { sasCode, senderDevice } = await receiver.initiateHandshake(qrPayload);
-
-      assert.strictEqual(senderDevice, "Anshul-Workstation");
-      assert.strictEqual(sasCode.length, 6);
-
-      // 8. Explicit User Acceptance on Receiver (Invariant: Receiver Approval)
-      const unpackResult = await receiver.acceptHandover();
-
-      // 9. Verify Final Handover State on Machine B
-      assert.strictEqual(unpackResult.capsule.handover.objective, "Make sure Node 20+ runtime is targeted and run tests.");
-      assert.strictEqual(unpackResult.capsule.git.identity.name, identity.name);
-      assert.strictEqual(unpackResult.capsule.conversation?.totalTurns, 4);
-      assert.ok(unpackResult.validatedFilePaths.length > 0);
-      assert.strictEqual(receiver.getState(), "HANDOVER_READY");
-      assert.strictEqual(sender.getState(), "COMPLETE");
-    } finally {
-      await sender.close();
-    }
+    // 8. Discover and load on Machine 2
+    const loadResult = await ContextSyncManager.loadHandoff(stagingDir);
+    assert.strictEqual(loadResult.found, true);
+    assert.strictEqual(loadResult.document?.handover.objective, "Make sure Node 20+ runtime is targeted and run tests.");
+    assert.ok(loadResult.document?.handover.primedResumePrompt.includes("Node 20+"));
   });
 });

@@ -23,13 +23,10 @@
     "ai:resume": "agentdrop load",
     "ai:status": "agentdrop status",
     "ai:save": "agentdrop save",
-    "ai:ui": "agentdrop ui",
     "postinstall": "agentdrop hook install"
   },
   "dependencies": {
-    "agentdrop-portability-core": "1.0.10",
-    "@types/qrcode": "^1.5.6",
-    "qrcode": "^1.5.4"
+    "agentdrop-portability-core": "1.0.10"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

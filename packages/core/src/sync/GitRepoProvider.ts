@@ -360,10 +360,6 @@ fi
           pkg.scripts["ai:status"] = "agentdrop status";
           modified = true;
         }
-        if (!pkg.scripts["ai:ui"]) {
-          pkg.scripts["ai:ui"] = "agentdrop ui";
-          modified = true;
-        }
 
         const safePostinstallCmd = "agentdrop hook install || npx --no-install agentdrop hook install || true";
         if (!pkg.scripts["postinstall"]) {

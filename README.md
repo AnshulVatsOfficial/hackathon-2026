@@ -3,7 +3,7 @@
 > **"It doesn't move a chat window. It moves the AI's working context."**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests: 27 Passing](https://img.shields.io/badge/Tests-27%20Passing-brightgreen.svg)]()
+[![Tests: 30 Passing](https://img.shields.io/badge/Tests-30%20Passing-brightgreen.svg)]()
 [![Local-First](https://img.shields.io/badge/Architecture-Local--First%20%7C%20Git--Native-blue.svg)]()
 [![Zero Cloud Leak](https://img.shields.io/badge/Privacy-Zero%20Cloud%20Leak-success.svg)]()
 
@@ -64,7 +64,7 @@ AgentDrop binds the AI agent's working state directly to the **Git & GitHub life
 3. **Universal Security Scan**: No capsule component (`conversation`, `git`, `nativePayload`) bypasses the security scanner.
 4. **Git-Native Persistence**: Context is coupled to the Git remote repository, branch, and commit.
 5. **Boundary & Decompression Protection**: Segment-aware path validator rejects `../`, absolute paths, Windows drive letters, duplicate archive paths, and zip-bombs.
-6. **Multi-Tier Transport**: Asynchronous Git & GitHub sync by default, plus direct ephemeral P2P streaming (ECDH + HKDF + 6-digit SAS code + AES-256-GCM) for offline local Wi-Fi / hotspot transfers.
+6. **Universal NPM Portability**: Pure npm package distribution with zero native runtime dependencies or binary daemons; runs seamlessly across any developer environment with standard Node.js & Git.
 
 ---
 
@@ -76,25 +76,17 @@ hackathon-2026/
 │   ├── core/                  # Headless Context Portability Engine
 │   │   ├── src/
 │   │   │   ├── capsule/       # Schema, validator, packager, unpacker (.aicapsule)
-│   │   │   ├── security/      # File policy, scanner, pre-sanitizer, crypto (ECDH/HKDF/AES-256-GCM)
+│   │   │   ├── security/      # File policy, scanner, pre-sanitizer (regex/entropy)
 │   │   │   ├── git/           # GitIdentity, snapshot collector, TargetWorkspaceSafety
 │   │   │   ├── sync/          # GitRepoProvider, RemoteSyncProvider, ContextSyncManager
 │   │   │   ├── context/       # Deterministic offline extractor
-│   │   │   ├── network/       # P2P protocol, sender, receiver, discovery
 │   │   │   └── adapters/      # AntigravityAdapter & ClaudeCodeAdapter
 │   │   └── fixtures/          # Golden Demo Fixture (Antigravity auth task)
 │   │
-│   ├── cli/                   # Standalone CLI Companion & Web Dashboard
-│   │   ├── bin/agentdrop.js   # Executable entrypoint (`agentdrop`)
-│   │   └── src/
-│   │       ├── index.ts       # `save`, `status`, `load`, `beam`, `listen`, `sessions`, `ui`
-│   │       └── ui.ts          # Embedded Web UI Dashboard server (localhost:3333)
-│   │
-│   └── vscode-extension/      # VS Code / Antigravity IDE Extension
-│       ├── src/
-│       │   ├── extension.ts   # Extension entrypoint and commands
-│       │   └── AgentDropViewProvider.ts # Sidebar Webview (Git Handoff, Sessions, Radar)
-│       └── resources/         # Activity bar icon
+│   └── cli/                   # Standalone CLI Companion
+│       ├── bin/agentdrop.js   # Executable entrypoint (`agentdrop`)
+│       └── src/
+│           └── index.ts       # `init`, `hook`, `save`, `status`, `load`, `sessions`
 └── tsconfig.base.json
 ```
 
@@ -158,41 +150,33 @@ npm run ai:resume
 agentdrop load
 ```
 
-### 4. Interactive Web UI Dashboard
-Launch the visual dashboard locally or across the network:
+### 4. Project Initialization & Git Hooks
+Set up automatic context synchronization in any project:
 ```bash
-node packages/cli/bin/agentdrop.js ui
-# Open http://localhost:3333 in any browser
-```
+# Initialize .agentdrop directory, AGENTS.md instruction bridge, and npm scripts:
+agentdrop init
 
-### 5. Optional: Direct Offline Peer-to-Peer Transfer (Hotspot Mode)
-If both devices are in the same room without internet access:
-```bash
-# Machine A (Sender):
-node packages/cli/bin/agentdrop.js beam --demo
-
-# Machine B (Receiver):
-node packages/cli/bin/agentdrop.js listen <PAIRING_TOKEN>
+# Install Git post-pull and post-checkout notification hooks:
+agentdrop hook install
 ```
 
 ---
 
 ## Automated Test Suite
 
-AgentDrop includes 27 comprehensive automated tests across all subsystems:
+AgentDrop includes 30 comprehensive automated tests across all core and CLI subsystems:
 
 | Test Suite | Tests | Description |
 | :--- | :--- | :--- |
-| **`sync.test.ts`** | 4 | In-repo `.agentdrop/` creation, branch matching, and off-tree remote cache |
+| **`sync.test.ts`** | 7 | In-repo `.agentdrop/` creation, branch matching, `init`, hooks, and AGENTS.md |
 | **`security.test.ts`** | 3 | Sensitive file exclusions, pattern-based secret redaction, pre-AI sanitization |
 | **`validator.test.ts`** | 5 | Directory traversal (`../`), absolute paths, Windows drive letters, zip-bombs |
-| **`adapters.test.ts`** | 2 | Real session discovery & extraction across Antigravity & Claude Code |
-| **`p2p.test.ts`** | 3 | Ephemeral ECDH keypair, HKDF-SHA256, 6-digit SAS, AES-256-GCM cipher |
+| **`adapters.test.ts`** | 3 | Real session discovery & extraction across Antigravity & Claude Code |
 | **`git.test.ts`** | 2 | Identity detection, repo fingerprinting, and working tree snapshotting |
 | **`fallback.test.ts`** | 1 | Offline deterministic context extraction without cloud models |
 | **`capsule.test.ts`** | 2 | Full archive serialize/deserialize cycle and golden fixture validation |
-| **`e2e.test.ts`** | 1 | Full end-to-end context portability chain |
-| **`cli.test.ts`** | 4 | CLI commands (`save`, `status`, `beam`, `listen`, `sessions`) |
+| **`e2e.test.ts`** | 1 | Full end-to-end context portability chain (pack, unpack, save, load) |
+| **`cli.test.ts`** | 6 | CLI commands (`--help`, `--version`, `sessions`, `save`, `init`, `hook`) |
 
 ---
 
@@ -200,5 +184,5 @@ AgentDrop includes 27 comprehensive automated tests across all subsystems:
 
 1. **The Context Trap (0:00 - 0:45)**: Show in-flight AI coding session on Machine 1 with failing tests and architectural decisions. Explain that Git pushes the code, but loses the AI's memory.
 2. **The Git-Native Save (0:45 - 1:30)**: Run `agentdrop save`. Point out the scrubbed secrets, structured `.agentdrop/handover.json`, and human-readable `.agentdrop/HANDOVER.md`. Run `git push`.
-3. **Machine 2 Asynchronous Recovery (1:30 - 2:30)**: Turn off Machine 1. Open Machine 2, clone the repository, and run `agentdrop status` (or open the VS Code sidebar). The Handover Card appears instantly with previous decisions and the exact active roadblock.
+3. **Machine 2 Asynchronous Recovery (1:30 - 2:30)**: Turn off Machine 1. Open Machine 2, clone the repository, and run `agentdrop status`. The Handover Card appears instantly with previous decisions and the exact active roadblock.
 4. **Instant Continuation (2:30 - 3:00)**: Click **[Copy Resume Prompt]**, paste into the target AI agent, and watch the AI immediately resume fixing the failing test without re-explaining the task!
