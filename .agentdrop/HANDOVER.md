@@ -3,28 +3,42 @@
 > **AgentDrop Asynchronous Context Handoff**  
 **Author:** Shekhar Aggarwal  
 **Repository:** https://github.com/AnshulVatsOfficial/hackathon-2026.git  
-**Branch:** `main` | **Commit:** `ca099dc` | **Source Agent:** `antigravity`
+**Branch:** `main` | **Commit:** `08928e7` | **Source Agent:** `antigravity`
 
 ---
 
 ## Objective
-/plan yes, proceed but safely. we need to test it today using a real project so don't make mistakes.
+Fix refresh-token race condition
 
 ## Completed Milestones & Observed Work
+- [x] Token rotation logic drafted
+- [x] Redis replay key integration implemented
+
+## Important Implementation Decisions
+- :heavy_check_mark: **Redis token rotation selected over MongoDB transactions**
+- :heavy_check_mark: **Atomic single-key lock used for token rotation**
+
+## Failed Approaches (Do Not Repeat)
+- :x: Stateless token replay approach failed
+- :x: AssertionError: Expected 401 on token replay, got 200
 
 ## Current Roadblock / Active State
-> :warning: **Active development in progress**
+> :warning: **AssertionError: Expected 401 when replaying rotated refresh token within 500ms window, but received 200.**
+
+## Critical Files
+- `src/services/TokenService.ts`
+- `src/controllers/AuthController.ts`
 
 ## Primed Resume Prompt
 *Copy and paste this into Antigravity, Claude Code, Cursor, or any AI coding tool on Machine B to resume instantly:*
 
 ```text
-You are resuming an in-flight development session.
-Objective: /plan yes, proceed but safely. we need to test it today using a real project so don't make mistakes.
-Critical Files: See working tree changes
-Recent instructions:
-- /plan yes, proceed but safely. we need to test it today using a real project so don't make mistakes.
-Please inspect these files and continue from where we left off.
+You are resuming an active task.
+Objective: Fix refresh-token race condition
+Decisions: Using Redis token rotation, Node 20+
+Current Blocker: AssertionError: Expected 401 when replaying rotated refresh token within 500ms window, but received 200.
+Critical Files: src/services/TokenService.ts, src/controllers/AuthController.ts
+Please resolve the race condition in TokenService.ts and run tests.
 ```
 
 ---

@@ -522,21 +522,29 @@ export class AgentDropViewProvider implements vscode.WebviewViewProvider {
   <title>AgentDrop</title>
   <style>
     :root {
-      --bg: var(--vscode-sideBar-background, #1e1e2e);
-      --card-bg: var(--vscode-editor-background, #181825);
-      --border: var(--vscode-widget-border, #313244);
-      --text: var(--vscode-foreground, #cdd6f4);
-      --text-muted: var(--vscode-descriptionForeground, #a6adc8);
-      --accent: var(--vscode-button-background, #89b4fa);
-      --accent-hover: var(--vscode-button-hoverBackground, #b4befe);
-      --success: #a6e3a1;
-      --warning: #f9e2af;
-      --danger: #f38ba8;
-      --code-bg: rgba(0, 0, 0, 0.35);
+      --bg: var(--vscode-sideBar-background, #F4F5F7);
+      --card-bg: var(--vscode-editor-background, #FFFFFF);
+      --border: var(--vscode-widget-border, #DFE1E6);
+      --text: var(--vscode-foreground, #172B4D);
+      --text-muted: var(--vscode-descriptionForeground, #5E6C84);
+      --accent: #0052CC;
+      --accent-hover: #0065FF;
+      --success: #00875A;
+      --warning: #FFAB00;
+      --danger: #DE350B;
+      --code-bg: rgba(9, 30, 66, 0.04);
+      --jira-blue-light: #DEEBFF;
+      --jira-blue-text: #0747A6;
+      --jira-green-light: #E3FCEF;
+      --jira-green-text: #006644;
+      --jira-red-light: #FFEBE6;
+      --jira-red-text: #BF2600;
+      --jira-yellow-light: #FFF0B3;
+      --jira-yellow-text: #172B4D;
     }
 
     body {
-      font-family: var(--vscode-font-family, system-ui, sans-serif);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
       font-size: var(--vscode-font-size, 13px);
       color: var(--text);
       background-color: var(--bg);
@@ -561,15 +569,15 @@ export class AgentDropViewProvider implements vscode.WebviewViewProvider {
       align-items: center;
       gap: 6px;
       font-weight: 600;
+      color: var(--text);
     }
     .badge-offline {
-      background: rgba(166, 227, 161, 0.15);
-      color: var(--success);
+      background: var(--jira-green-light);
+      color: var(--jira-green-text);
       font-size: 10px;
       padding: 2px 6px;
-      border-radius: 10px;
-      border: 1px solid rgba(166, 227, 161, 0.3);
-      font-weight: 600;
+      border-radius: 3px;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -579,9 +587,9 @@ export class AgentDropViewProvider implements vscode.WebviewViewProvider {
       display: flex;
       gap: 4px;
       margin-bottom: 12px;
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(9, 30, 66, 0.04);
       padding: 3px;
-      border-radius: 6px;
+      border-radius: 4px;
       border: 1px solid var(--border);
     }
     .tab-btn {
@@ -593,14 +601,14 @@ export class AgentDropViewProvider implements vscode.WebviewViewProvider {
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
-      border-radius: 4px;
+      border-radius: 3px;
       text-align: center;
       transition: all 0.15s ease;
     }
     .tab-btn.active {
       background: var(--card-bg);
-      color: var(--text);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      color: var(--accent);
+      box-shadow: 0 1px 3px rgba(9, 30, 66, 0.2);
     }
 
     /* Tab Content Panels */

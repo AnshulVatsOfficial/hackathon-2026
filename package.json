@@ -15,7 +15,12 @@
     "test:git": "npm run test:git --workspace=agentdrop-portability-core",
     "test:fallback": "npm run test:fallback --workspace=agentdrop-portability-core",
     "test:capsule": "npm run test:capsule --workspace=agentdrop-portability-core",
-    "test:e2e": "npm run test:e2e --workspace=agentdrop-portability-core"
+    "test:e2e": "npm run test:e2e --workspace=agentdrop-portability-core",
+    "ai:save": "agentdrop save",
+    "ai:resume": "agentdrop load",
+    "ai:status": "agentdrop status",
+    "ai:ui": "agentdrop ui",
+    "postinstall": "agentdrop hook install"
   },
   "devDependencies": {
     "typescript": "^5.7.2",
